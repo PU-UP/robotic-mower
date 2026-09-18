@@ -1,0 +1,17 @@
+{
+  "name": "auto_fault_recovery",
+  "description": "自动反馈示例：按上层指令执行，注入定位故障，验证错误锁存与显式恢复。",
+  "duration": 2.3,
+  "feedback": "auto",
+  "steps": [
+    {"at": 0, "command": {"command_id": "work-auto", "type": "START_MOWING", "params": {"map_id": "garden", "region_ids": ["region-1"]}}},
+    {"at": 0.3, "fault": {"module": "perception", "reason": "LOCALIZATION_LOST"}},
+    {"at": 0.5, "label": "自动模块反馈故障后停止", "expect": {"directive": {"mode": "ERROR", "phase": "NONE", "mission": null}}},
+    {"at": 0.6, "fault": {"module": "perception", "reason": ""}},
+    {"at": 0.8, "label": "故障消失不会自动启动", "expect": {"brain_status": {"mode": "ERROR"}}},
+    {"at": 0.85, "command": {"command_id": "reset-auto", "type": "RESET_ERROR"}},
+    {"at": 0.9, "command": {"command_id": "resume-auto", "type": "RESUME"}},
+    {"at": 1.2, "label": "重新准备后继续执行", "expect": {"directive": {"mode": "WORKING", "phase": "EXECUTE"}}},
+    {"at": 2.1, "label": "自动反馈完成业务任务", "expect": {"brain_status": {"mode": "IDLE", "last_task_result": {"task_id": "work-auto", "result": "completed"}}}}
+  ]
+}

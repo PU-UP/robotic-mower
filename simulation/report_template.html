@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>brain · 业务交互回放</title>
+<style>
+:root{--ink:#203a43;--muted:#64767c;--line:#dce4e3;--paper:#f4f6f3;--teal:#147d78;--blue:#315c99;--amber:#a9631b;--red:#b9473e}
+*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:14px/1.55 system-ui,"Microsoft YaHei",sans-serif}main{max-width:1440px;margin:auto;padding:22px 28px}h1,h2,p{margin:0}h1{font-size:25px;letter-spacing:-.5px}h2{font-size:16px}button,select,input{font:inherit}button,select{border:1px solid #bacacb;background:white;border-radius:5px;padding:7px 11px;color:var(--ink)}button{cursor:pointer}button:hover{border-color:var(--teal)}button:disabled{opacity:.4;cursor:default}:focus-visible{outline:3px solid #72aca7;outline-offset:3px}.muted{color:var(--muted)}.mono{font-family:Consolas,monospace}.header,.toolbar,.section-title{display:flex;align-items:center;justify-content:space-between;gap:16px}.header{margin-bottom:12px}.eyebrow{color:var(--teal);font-size:11px;letter-spacing:2px;font-weight:700}.intro{font-size:13px;color:var(--muted);margin-top:4px}.toolbar{padding:12px 16px;background:white;border:1px solid var(--line);border-bottom:0;flex-wrap:wrap}.controls{display:flex;gap:8px;align-items:center}#play{background:var(--ink);color:white;min-width:82px}#jump{max-width:350px}#counter{min-width:155px;text-align:center;font-size:13px}.scrub{display:flex;align-items:center;gap:14px;background:white;border:1px solid var(--line);border-top:0;padding:0 16px 10px}#step{width:100%;accent-color:var(--teal)}#time{white-space:nowrap;font-size:12px}.stage{display:grid;grid-template-columns:minmax(0,1fr) 300px;border:1px solid var(--line);margin-top:12px;background:white}.main-stage{min-width:0;border-right:1px solid var(--line)}.message{height:260px;display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:20px;padding:16px 20px;border-bottom:1px solid var(--line);background:#f0f6f5;border-left:4px solid var(--teal)}.message-copy{min-width:0;overflow:auto}.message-json{min-width:0;min-height:0;display:flex;flex-direction:column;border-left:1px solid #cfdddc;padding-left:18px}.payload-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12px;color:var(--muted);margin-bottom:5px}.payload-heading strong{color:var(--teal);font-family:Consolas,monospace;font-size:13px}#payload{margin:0;font:12px/1.5 Consolas,monospace;white-space:pre;overflow:auto;flex:1;min-height:0;max-height:none;tab-size:2}#direction{color:var(--teal);font-size:12px;font-weight:700}#headline{font-size:21px;font-weight:650;margin:4px 0}#explanation{font-size:13px;color:#4b626a}.diagram-scroll{overflow-x:auto}.diagram{width:100%;min-width:640px;display:block;max-height:470px}.node rect{fill:white;stroke:#c9d5d5;stroke-width:1.5}.node.active rect{stroke:var(--teal);stroke-width:3;fill:#f2faf8}.node.brain rect{fill:#f2f5f8;stroke:#93a9bd}.node.brain.active rect{stroke:var(--teal);fill:#edf7f4}.node-title{font-size:19px;font-weight:650;fill:var(--ink)}.node-role{font-size:12px;fill:var(--muted)}.node-value{font-size:15px;fill:var(--ink)}.node-small{font-size:12px;fill:var(--muted)}.wire{stroke:#d6dfdf;stroke-width:2;fill:none;marker-end:url(#arrow)}.wire.active{stroke:var(--teal);stroke-width:3.5;marker-end:url(#active-arrow)}.wire.down.active{stroke:var(--blue);marker-end:url(#blue-arrow)}.wire.world{stroke-dasharray:5 4}.wire-label{font-size:12px;fill:#839193}.active-label{font-size:14px;font-weight:650;fill:var(--teal);paint-order:stroke;stroke:white;stroke-width:6px;stroke-linejoin:round}.legend{padding:0 22px 14px;display:flex;gap:20px;font-size:12px;color:var(--muted)}.legend span:first-child{color:var(--blue)}.legend span:nth-child(2){color:var(--teal)}.side{padding:18px 18px 12px;display:flex;flex-direction:column;gap:16px}.side h2{margin-bottom:10px}.facts{margin:0;display:grid;grid-template-columns:55px 1fr;gap:7px 10px;font-size:13px}.facts dt{color:var(--muted)}.facts dd{margin:0;overflow-wrap:anywhere}#map{width:100%;height:172px;background:#f4f7f2;border:1px solid var(--line);border-radius:4px}.map-note{font-size:11px;color:var(--muted);margin-top:5px}.map-key{font-size:11px;color:#52665b;margin-top:5px}.receipt{border-top:1px solid var(--line);padding-top:14px;min-height:90px}#receipt{font-size:13px}.footnote{font-size:12px;color:var(--muted);margin:10px 0}.details-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}details{border:1px solid var(--line);background:white;padding:12px 16px}summary{cursor:pointer;font-weight:550}pre{white-space:pre-wrap;overflow-wrap:anywhere;font:12px/1.6 Consolas,monospace;max-height:340px;overflow:auto}.pass{color:var(--teal)}.fail{color:var(--red)}#checks{padding-left:20px;margin-bottom:0}.detail-body{margin-top:12px}.detail-body label{display:block;margin-bottom:8px}.log{max-height:320px;overflow:auto}table{border-collapse:collapse;width:100%;font-size:12px}td,th{border-bottom:1px solid var(--line);padding:6px;text-align:left;vertical-align:top}th{position:sticky;top:0;background:white}td pre{margin:0;max-width:480px}.badge{padding:3px 8px;background:#e8f2ed;color:var(--teal);font-size:12px;border-radius:3px}.error{color:var(--red)}
+@media(min-width:1500px){main{padding-top:28px}.diagram{max-height:500px}}
+@media(max-width:1050px){main{padding:16px}.stage{grid-template-columns:minmax(0,1fr)}.main-stage{border-right:0}.side{border-top:1px solid var(--line);display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px}.receipt{border-top:0;padding-top:0}.diagram{max-height:470px}.header{align-items:flex-start}}
+@media(max-width:650px){.header{display:block}.header label{display:block;margin-top:12px}.side,.details-grid{grid-template-columns:1fr}.controls{flex-wrap:wrap}#counter{min-width:auto}.toolbar{gap:10px}#jump{max-width:250px}.message{height:350px;padding:12px;grid-template-columns:1fr;grid-template-rows:104px minmax(0,1fr);gap:10px}.message-json{border-left:0;border-top:1px solid #cfdddc;padding:8px 0 0}#headline{font-size:18px}.legend{flex-wrap:wrap;gap:5px 16px}}
+</style>
+<main>
+  <header class="header"><div><div class="eyebrow">BRAIN / INTERACTION REPLAY</div><h1>业务交互，一步一步看</h1><p class="intro" id="description"></p></div><label>场景 <select id="scenario" aria-label="选择仿真场景"></select></label></header>
+  <div class="toolbar"><div class="controls"><button id="previous" title="键盘 ←">上一步</button><button id="play">自动播放</button><button id="next" title="键盘 →">下一步</button><output id="counter"></output></div><div class="controls"><label>跳转 <select id="jump" aria-label="跳转到业务动作"></select></label><label>节奏 <select id="speed"><option value="1600">正常</option><option value="3000">慢速</option><option value="700">快速</option></select></label></div></div>
+  <div class="scrub"><input id="step" type="range" min="0" value="0" step="1" aria-label="交互步骤"><output class="mono" id="time"></output></div>
+  <section class="stage" aria-label="固定位置的模块交互流程图">
+    <div class="main-stage"><div class="message"><div class="message-copy" aria-live="polite"><div id="direction"></div><div id="headline"></div><p id="explanation"></p></div><div class="message-json"><div class="payload-heading"><strong id="payload-kind"></strong><span>本步实际消息</span></div><pre id="payload" tabindex="0" aria-label="当前步骤的完整 JSON 消息"></pre></div></div>
+    <div class="diagram-scroll"><svg class="diagram" viewBox="0 0 900 520" role="img" aria-labelledby="diagram-title diagram-description">
+      <title id="diagram-title">上层、brain 与三个平行算法模块</title><desc id="diagram-description">高亮箭头表示当前步骤传递的消息；模块位置始终固定。</desc>
+      <defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="#c7d4d4"/></marker><marker id="active-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="#147d78"/></marker><marker id="blue-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="#315c99"/></marker></defs>
+      <path class="wire" id="command-wire" d="M415 116V178"/><path class="wire" id="reply-wire" d="M485 178V116"/>
+      <path class="wire down" id="down-perception" d="M330 308V327H112V388"/><path class="wire down" id="down-map_manager" d="M415 308V388"/><path class="wire down" id="down-pnc" d="M555 308V327H702V388"/>
+      <path class="wire" id="up-perception" d="M222 388V351H365V308"/><path class="wire" id="up-map_manager" d="M517 388V351H485V308"/><path class="wire" id="up-pnc" d="M812 388V351H585V308"/>
+      <path class="wire world" id="world-wire" d="M130 111V300H70V388"/>
+      <text class="wire-label" x="350" y="140">指令 ↓</text><text class="wire-label" x="503" y="140">↑ 回执</text>
+      <text class="wire-label" x="84" y="374">↓ 任务</text><text class="wire-label" x="212" y="374">↑ 状态</text><text class="wire-label" x="387" y="374">↓ 任务</text><text class="wire-label" x="505" y="374">↑ 状态</text><text class="wire-label" x="674" y="374">↓ 任务</text><text class="wire-label" x="800" y="374">↑ 状态</text>
+      <text class="active-label" id="upper-label" x="450" y="160" text-anchor="middle"></text><text class="active-label" id="lower-label" x="450" y="340" text-anchor="middle"></text>
+      <g class="node" id="node-world"><rect x="30" y="40" width="200" height="71" rx="6"/><text class="node-role" x="48" y="64">模拟环境 · 位姿 / 故障</text><text class="node-value" id="world-value" x="48" y="90">由场景脚本提供</text></g>
+      <g class="node" id="node-external"><rect x="325" y="24" width="250" height="92" rx="6"/><text class="node-title" x="345" y="55">用户 / 上层系统</text><text class="node-value" id="external-value" x="345" y="84">等待操作</text><text class="node-small" x="345" y="103">业务指令与外部事件</text></g>
+      <g class="node brain" id="node-brain"><rect x="290" y="178" width="320" height="130" rx="6"/><text class="node-title" x="310" y="209">brain</text><text class="node-role" x="400" y="207">业务决策与任务切换</text><text class="node-value" id="brain-mode" x="310" y="237"></text><text class="node-value" id="brain-mission" x="310" y="263"></text><text class="node-small" id="brain-wait" x="310" y="289"></text></g>
+      <g class="node" id="node-perception"><rect x="40" y="388" width="230" height="115" rx="6"/><text class="node-title" x="57" y="419">perception</text><text class="node-role" x="57" y="440">感知 · 定位 · 检测</text><text class="node-value" id="value-perception" x="57" y="467"></text><text class="node-small" id="job-perception" x="57" y="489"></text></g>
+      <g class="node" id="node-map_manager"><rect x="335" y="388" width="230" height="115" rx="6"/><text class="node-title" x="352" y="419">map_manager</text><text class="node-role" x="352" y="440">业务地图 · 采集 · 提交</text><text class="node-value" id="value-map_manager" x="352" y="467"></text><text class="node-small" id="job-map_manager" x="352" y="489"></text></g>
+      <g class="node" id="node-pnc"><rect x="630" y="388" width="230" height="115" rx="6"/><text class="node-title" x="647" y="419">pnc</text><text class="node-role" x="647" y="440">当前任务的规划与控制</text><text class="node-value" id="value-pnc" x="647" y="467"></text><text class="node-small" id="job-pnc" x="647" y="489"></text></g>
+    </svg></div><div class="legend"><span>蓝色 ↓ 当前下发</span><span>绿色 ↑ 当前反馈 / 输入</span><span>灰色：本步无消息</span></div></div>
+    <aside class="side"><div><div class="section-title"><h2>当前业务</h2><span class="badge" id="revision"></span></div><dl class="facts"><dt>模式</dt><dd id="mode"></dd><dt>阶段</dt><dd id="phase"></dd><dt>任务</dt><dd id="mission"></dd><dt>地图</dt><dd id="map-id"></dd></dl></div><div><h2>地图与模拟位置</h2><svg id="map" viewBox="0 0 300 185" role="img" aria-label="已提交区域、通道、采集草稿及模拟位置"></svg><p class="map-key">绿色 区域　橙色 通道　蓝虚线 草稿</p><p class="map-note" id="map-time"></p></div><div class="receipt"><h2>最近的上层回执</h2><p id="receipt"></p><p class="map-note">“已接受”表示指令受理，业务完成要看后续反馈。</p></div></aside>
+  </section>
+  <p class="footnote" id="step-note"></p>
+  <div class="details-grid"><details><summary id="check-summary">场景验收</summary><ul id="checks"></ul></details><details id="technical"><summary>技术详情 · 当前消息与原始记录</summary><div class="detail-body"><h2>当前消息</h2><pre id="raw"></pre><h2>当前下发的 directive</h2><pre id="directive"></pre><details><summary>完整原始消息记录（含心跳）</summary><div class="log"><table><thead><tr><th>时间</th><th>方向</th><th>消息</th></tr></thead><tbody id="events"></tbody></table></div></details></div></details></div>
+  <p class="footnote">模块卡片保留最近观测到的基本状态；新指令的确认情况由 brain 单独统计。闭环等检测结果通过本步 status 展示。此页面验证业务交互；位置与算法反馈来自仿真替身。地图使用不晚于当前步骤的采样，算法模块间的高频数据流未逐条记录。</p>
+</main>
+<script id="data" type="application/json">__REPORT_DATA__</script>
+<script>
+"use strict";
+const runs=JSON.parse(document.getElementById("data").textContent),$=id=>document.getElementById(id);
+const modules=["perception","map_manager","pnc"], names={external:"用户 / 上层",brain:"brain",modules:"三个算法模块",world:"模拟环境",scenario:"模拟环境",perception:"perception",map_manager:"map_manager",pnc:"pnc"};
+const modes={IDLE:"待机",MAPPING:"建图",WORKING:"作业",RETURNING:"回充",PAUSED:"已暂停",CHARGING:"充电",ERROR:"故障停止"},phases={NONE:"无执行任务",PREPARE:"准备，等待模块就绪",EXECUTE:"执行",COMMIT:"提交，等待保存确认"};
+const states={READY:"已就绪",RUNNING:"执行中",SUCCEEDED:"已完成",BLOCKED:"受阻",FAILED:"失败",REJECTED:"校验拒绝",STOPPED:"已停止"};
+const commands={START_MAPPING:"开始建图",SELECT_REGION_START:"选择区域起点",START_EDGE_FOLLOW:"开始 / 继续自动沿边",TAKE_OVER:"临时遥控接管",START_CHANNEL:"开始建通道",FINISH_CHANNEL:"结束通道采集",FINISH_MAPPING:"结束整次建图",START_MOWING:"开始割草",RETURN_HOME:"返回充电站",PAUSE:"暂停任务",RESUME:"恢复任务",CANCEL:"取消任务",RESET_ERROR:"解除故障",LOW_BATTERY:"电量不足",BATTERY_OK:"电量已恢复"};
+const reasons={CHANNEL_START_OUTSIDE_REGION:"通道起点不在已建区域内",LOCALIZATION_LOST:"定位丢失",LOCALIZATION_UNAVAILABLE:"定位不可用",MAP_OR_TARGET_UNAVAILABLE:"地图或目标不可用",MAP_ALREADY_EXISTS:"地图已存在",TRACE_NOT_CLOSED:"边界尚未闭合",CHANNEL_TOO_SHORT:"通道长度不足",PLANNING_INPUT_INVALID:"规划输入不可用","localization lost":"定位丢失"};
+const scenarioNames={mapping_session:"建图 · 两个区域与一条通道",mowing:"割草",pause_resume:"暂停与续作",return_home:"回充",low_battery:"低电抢占",fault_recovery:"故障恢复",status_timeout:"状态超时",stale_input:"定位数据过期",cancel:"取消任务",cover_regions:"多区域作业",pause_and_timeout:"暂停与超时",auto_fault_recovery:"自动反馈与故障恢复"};
+let run,steps=[],timer=null;
+const copy=x=>JSON.parse(JSON.stringify(x));
+const targetName=id=>id?String(id).replace(/^region-/,"区域 ").replace(/^channel-/,"通道 ").replace(/^dock$/,"充电站"):"";
+const why=s=>reasons[s]??(s?.includes("status timeout")?`${s.split(":")[0]} 反馈超时`:s??"");
+function missionName(m){if(!m)return "无当前任务";const target=targetName(m.region_id??m.channel_id??m.station_id);return ({MANUAL_DRIVE:"遥控转场",MAP_REGION:`${target} · ${m.control==="AUTO_EDGE"?"自动沿边":"遥控采集"}`,MAP_CHANNEL:`${target} · 遥控采集`,SAVE_MAP:"保存整张地图",COVER_REGION:`${target} · 覆盖作业`,RETURN_HOME:`前往${target||"充电站"}`})[m.type]??m.type}
+function commandName(p){return [commands[p.type]??p.type,targetName(p.params?.region_id??p.params?.channel_id)].filter(Boolean).join(" · ")}
+function statusIgnored(p,d,statuses,issuedAt,now,timeout){const last=statuses[p.module];return p.revision!==d.revision||p.stamp<issuedAt||now-p.stamp<0||now-p.stamp>timeout||Boolean(last&&(p.sequence<=last.sequence||p.stamp<last.stamp))}
+// Walk the event log in delivery order. Equal timestamps must never reveal a later decision.
+function buildSteps(r){
+  let d={revision:0,mode:"IDLE",phase:"NONE",mission:null},statuses={},moduleStates={},operator="等待操作",receipt="尚无回执",position=null,issuedAt=0;
+  const result=[],seen=new Map(),commandById=new Map();
+  const initial=r.frames[0];
+  for(const name of modules){
+    const observed=initial?.modules?.[name];
+    if(initial?.time<=r.events[0]?.time&&observed?.revision===0)
+      moduleStates[name]={state:observed.state,revision:0,sequence:0,stamp:initial.time};
+  }
+  r.events.forEach((e,eventIndex)=>{
+    const p=e.payload??e;let ignored=false,keep=true;
+    if(e.action==="mode_mission"){d=copy(p);statuses={};issuedAt=e.time}
+    if(e.action==="command"||e.action==="event"){operator=commandName(p);if(p.command_id)commandById.set(p.command_id,operator)}
+    if(e.action==="command_result")receipt=`${commandById.get(p.command_id)??"上层指令"}：${p.state==="ACCEPTED"?"已接受":"已拒绝"}${p.reason?" · "+why(p.reason):""}`;
+    if(e.action==="position")position=p.position;
+    if(e.action==="status"){
+      ignored=statusIgnored(p,d,statuses,issuedAt,e.time,r.status_timeout??1.0);
+      // Heartbeat timestamps, sequences and numerical progress remain in raw diagnostics.
+      const signature=JSON.stringify([p.revision,p.state,p.reason,p.signal,ignored]);
+      keep=seen.get(p.module)!==signature;seen.set(p.module,signature);
+      if(!ignored)statuses[p.module]=copy(p);
+      const previous=moduleStates[p.module];
+      // Preserve each module's latest observation across directives. Late feedback cannot rewind it.
+      if(p.stamp<=e.time&&(!previous||(p.revision>=previous.revision&&p.sequence>previous.sequence&&p.stamp>=previous.stamp)))
+        moduleStates[p.module]=copy(p);
+    }
+    if(keep)result.push({event:e,eventIndex,d:copy(d),statuses:copy(statuses),moduleStates:copy(moduleStates),operator,receipt,position:copy(position),ignored});
+  });
+  return result;
+}
+function describe(s){
+  const e=s.event,p=e.payload??e,d=s.d,m=d.mission,mission=missionName(m);let title="",detail="",short="";
+  if(e.action==="command"||e.action==="event"){title=commandName(p);short=commands[p.type]??p.type;detail=({START_MAPPING:"请求建立新的业务地图；由 brain 安排遥控转场。",SELECT_REGION_START:"以当前位置作为区域起点，等待用户触发自动沿边。",START_EDGE_FOLLOW:"请求自动沿边；沿用当前区域起点与已采集草稿。",TAKE_OVER:"切换为遥控，继续记录同一区域边界；之后可继续自动沿边。",START_CHANNEL:"请求采集通道；map_manager 将校验起点是否在已建区域内。",FINISH_CHANNEL:"结束遥控采集；由 brain 要求地图模块提交通道。",FINISH_MAPPING:"请求保存整次建图成果；等待地图模块确认后才结束。"})[p.type]??"上层输入交给 brain 判断；后续步骤显示决策与模块反馈。"}
+  else if(e.action==="mode_mission"){
+    title=`${d.phase==="PREPARE"?"准备：":d.phase==="COMMIT"?"提交：":"下发："}${mission}`;short=({PREPARE:"准备任务",EXECUTE:"执行任务",COMMIT:"提交结果",NONE:"切换模式"})[d.phase]??"下发任务";
+    detail=d.phase==="PREPARE"?"向三个模块广播同一任务；等待三方就绪后，brain 再下发执行。":d.phase==="COMMIT"?"等待 map_manager 保存确认；下发提交指令不等于保存完成。":d.phase==="EXECUTE"?"三个模块按当前任务各自执行；brain 等待状态，不处理轨迹数据。":`切换到${modes[d.mode]??d.mode}，三个模块按新模式响应。`;
+    if(!m)title=`切换到${modes[d.mode]??d.mode}`;
+    if(e.reason)detail=why(e.reason);
+  }else if(e.action==="command_result"){title=p.state==="ACCEPTED"?"指令已受理":"指令被拒绝";short=title;detail=s.receipt+(p.state==="ACCEPTED"?"。这条回执不表示业务已经完成。":"。当前业务按已有状态保持。")}
+  else if(e.action==="status"){
+    short=p.signal==="REGION_CLOSED"?"检测到回到起点":states[p.state]??p.state;
+    title=`${names[e.source]??e.source}：${short}`;
+    detail=p.signal==="REGION_CLOSED"?"当前区域边界已闭合，通知 brain；下一步由 brain 决定提交区域。":p.state==="READY"?"当前任务的准备条件已满足；brain 汇总模块反馈。":p.state==="SUCCEEDED"?`${mission}的模块任务已完成，交给 brain 决定下一步。`:p.state==="RUNNING"?`${mission}正在执行，模块向 brain 返回当前状态。`:p.state==="STOPPED"?"模块已停止当前执行，向 brain 回报。":"模块返回异常或校验结果，交给 brain 决策。";
+    if(p.reason)detail=why(p.reason)+(p.state==="REJECTED"?"；brain 将处理本次操作的拒绝结果。":"；通知 brain 处理。");
+    if(s.ignored){title+="（忽略）";short="无效反馈，忽略";detail=`这条反馈的版本、时效或序号不符合当前要求；当前为第 ${d.revision} 版，反馈为第 ${p.revision} 版。`}
+  }else if(e.action==="position"){title=`模拟位置移动到 (${p.position.join(", ")})`;short="位姿输入";detail="场景脚本向感知侧提供模拟位置。坐标属于算法数据，不作为业务指令发给 brain。"}
+  else if(e.action==="fault"){title=`模拟${p.module??"模块"}${p.silent?"失联":p.reason?"故障":"恢复"}`;short="环境变化";detail=p.silent?"暂停该模块反馈，观察 brain 的超时处理。":why(p.reason)||"恢复算法替身，后续状态反馈由模块发送。"}
+  else {title=e.action;detail="场景记录";short=e.action}
+  return {title,detail,short};
+}
+function job(name,d){const m=d.mission;if(!m)return "按当前模式等待";if(d.phase==="PREPARE")return {perception:"任务：准备定位与感知",map_manager:m.type==="MAP_CHANNEL"?"任务：校验通道起点":"任务：准备地图与目标",pnc:"任务：停止，检查规划输入"}[name];if(d.phase==="COMMIT")return {perception:"任务：保持定位",map_manager:"任务：保存当前采集结果",pnc:"任务：停止运动"}[name];return {perception:m.type==="MAP_REGION"?"任务：定位，检测区域闭环":"任务：提供定位与感知",map_manager:({MAP_REGION:"任务：记录区域边界",MAP_CHANNEL:"任务：记录通道轨迹",MANUAL_DRIVE:"任务：维护业务地图"})[m.type]??"任务：提供地图与目标",pnc:m.type==="MAP_REGION"?(m.control==="AUTO_EDGE"?"任务：自动沿边控制":"任务：遥控运动"):m.type==="MANUAL_DRIVE"||m.type==="MAP_CHANNEL"?"任务：遥控运动":"任务：当前目标规划与控制"}[name]}
+function drawMap(s){
+  const e=s.event,frames=run.frames.filter(f=>f.time<=e.time),f=frames.at(-1)??{},svg=$("map");svg.replaceChildren();
+  const points=run.frames.flatMap(x=>[x.position??[0,0],...(x.trace??[]),...(x.map?.entities??[]).flatMap(a=>a.points)]);if(!points.length)points.push([0,0]);
+  const minX=Math.min(...points.map(p=>p[0])),minY=Math.min(...points.map(p=>p[1])),maxX=Math.max(...points.map(p=>p[0])),maxY=Math.max(...points.map(p=>p[1]));
+  const scale=Math.min(244/Math.max(1,maxX-minX),126/Math.max(1,maxY-minY)),xy=p=>[28+(p[0]-minX)*scale,155-(p[1]-minY)*scale];
+  const add=(tag,attrs)=>{const n=document.createElementNS("http://www.w3.org/2000/svg",tag);for(const [k,v]of Object.entries(attrs))n.setAttribute(k,v);svg.append(n);return n};
+  for(const a of f.map?.entities??[]){if(!a.points.length)continue;add(a.kind==="region"?"polygon":"polyline",{points:a.points.map(p=>xy(p).join(",")).join(" "),fill:a.kind==="region"?"#dfecd9":"none",stroke:a.kind==="channel"?"#a9631b":"#7b9975","stroke-width":2});const [x,y]=xy(a.points[0]);add("text",{x:x+2,y:y-5,"font-size":11,fill:"#486342"}).textContent=targetName(a.entity_id)}
+  if(f.trace?.length){add("polyline",{points:f.trace.map(p=>xy(p).join(",")).join(" "),fill:"none",stroke:"#315c99","stroke-width":2,"stroke-dasharray":"4 3"});const [cx,cy]=xy(f.trace[0]);add("circle",{cx,cy,r:4,fill:"white",stroke:"#315c99"})}
+  const pos=s.position??f.position;if(pos){const[cx,cy]=xy(pos);add("circle",{cx,cy,r:4,fill:"#203a43"})}
+  $("map-time").textContent=`地图采样 ${Number(f.time??0).toFixed(2)} s · 黑点为模拟位置`;
+}
+function show(){
+  const index=Number($("step").value),s=steps[index];if(!s)return;const e=s.event,p=e.payload??e,d=s.d,desc=describe(s);
+  $("counter").textContent=`第 ${index+1} / ${steps.length} 步`;$("time").textContent=`${e.time.toFixed(2)} s`;$("previous").disabled=index===0;$("next").disabled=index===steps.length-1;
+  $("direction").textContent=`${names[e.source]??e.source} → ${names[e.target]??e.target??"场景"}`;$("headline").textContent=desc.title;$("explanation").textContent=desc.detail;
+  $("brain-mode").textContent=`${modes[d.mode]??d.mode} · ${d.phase==="PREPARE"?"准备":d.phase==="COMMIT"?"提交":d.phase==="EXECUTE"?"执行":"等待"}`;$("brain-mission").textContent=missionName(d.mission);
+  const ready=modules.filter(n=>s.statuses[n]?.state==="READY").length;
+  $("brain-wait").textContent=d.phase==="PREPARE"?`第 ${d.revision} 版 · ${ready} / 3 模块已就绪`:d.phase==="COMMIT"?`第 ${d.revision} 版 · 等待地图保存确认`:`第 ${d.revision} 版 · 接收外部事件与模块状态`;
+  $("mode").textContent=modes[d.mode]??d.mode;$("phase").textContent=phases[d.phase]??d.phase;$("mission").textContent=missionName(d.mission);$("map-id").textContent=d.mission?.map_id??"—";$("revision").textContent=`第 ${d.revision} 版`;$("external-value").textContent=s.operator;$("receipt").textContent=s.receipt;
+  $("world-value").textContent=s.position?`位置 (${s.position.join(", ")})`:"由场景脚本提供";
+  for(const name of modules){
+    const status=s.moduleStates[name];
+    $("value-"+name).textContent="状态："+(status?(states[status.state]??"未知"):"未知");
+    $("value-"+name).setAttribute("aria-label",status?"最近模块状态："+(states[status.state]??status.state)+"，来自第 "+status.revision+" 版反馈":"尚未观测到模块状态");
+    $("job-"+name).textContent=job(name,d).replace("任务：","指令：");
+  }
+  document.querySelectorAll(".wire,.node").forEach(n=>n.classList.remove("active"));$("upper-label").textContent="";$("lower-label").textContent="";
+  const active=id=>$(id)?.classList.add("active");
+  if(e.action==="mode_mission"){active("node-brain");for(const n of modules){active("down-"+n);active("node-"+n)}$("lower-label").textContent=desc.short+" · "+missionName(d.mission)}
+  else if(e.action==="status"){active("node-"+e.source);active("up-"+e.source);active("node-brain");$("lower-label").textContent=`${e.source} → brain：${desc.short}`}
+  else if(e.action==="command"||e.action==="event"||e.action==="command_result"){active("node-external");active("node-brain");active(e.action==="command_result"?"reply-wire":"command-wire");$("upper-label").textContent=desc.short}
+  else {active("node-world");if(e.action==="position"){active("world-wire");active("node-perception")}else if(p.module)active("node-"+p.module)}
+  $("payload-kind").textContent=e.action==="mode_mission"?"directive":e.action;
+  $("payload").textContent=JSON.stringify(p,null,2);$("payload").scrollTop=0;$("payload").scrollLeft=0;
+  $("raw").textContent=JSON.stringify(e,null,2);$("directive").textContent=JSON.stringify(d,null,2);drawMap(s);
+  const milestone=Array.from($("jump").options).filter(o=>Number(o.value)<=index).at(-1);if(milestone)$("jump").value=milestone.value;
+}
+function stop(){clearInterval(timer);timer=null;$("play").textContent="自动播放"}
+function go(index){stop();$("step").value=Math.max(0,Math.min(steps.length-1,index));show()}
+function play(){if(timer){stop();return}if(Number($("step").value)===steps.length-1)$("step").value=0;show();$("play").textContent="暂停播放";timer=setInterval(()=>{if(Number($("step").value)>=steps.length-1){stop();return}$("step").value=Number($("step").value)+1;show();if(Number($("step").value)===steps.length-1)stop()},Number($("speed").value))}
+function select(){
+  stop();run=runs[Number($("scenario").value)];steps=buildSteps(run);$("description").textContent=run.description;$("step").max=Math.max(0,steps.length-1);$("step").value=0;$("jump").replaceChildren();
+  const addJump=(i,label)=>{const o=document.createElement("option");o.value=i;o.textContent=`${i+1}. ${label}`;$("jump").append(o)};
+  steps.forEach((s,i)=>{const e=s.event,p=e.payload??e;if(i===0||e.action==="command"||e.action==="event"||e.action==="fault"||e.action==="status"&&(p.signal||["REJECTED","FAILED","BLOCKED"].includes(p.state))||i===steps.length-1)addJump(i,describe(s).title)});
+  $("step-note").textContent=`按真实消息顺序回放 · ${run.events.length} 条原始消息，合并 ${run.events.length-steps.length} 条重复状态 / 进度更新 · 用 ← → 逐步查看，也可直接跳转到业务动作。`;
+  const passed=run.checks.filter(c=>c.passed).length;$("check-summary").textContent=`场景验收 · ${passed} / ${run.checks.length} 通过`;$("check-summary").className=passed===run.checks.length?"pass":"fail";$("checks").replaceChildren();
+  for(const c of run.checks){const li=document.createElement("li");li.className=c.passed?"pass":"fail";li.textContent=(c.passed?"通过 · ":"失败 · ")+c.name;if(!c.passed){const pre=document.createElement("pre");pre.textContent=JSON.stringify({expected:c.expected,actual:c.actual},null,2);li.append(pre)}$("checks").append(li)}
+  $("events").replaceChildren();for(const e of run.events){const row=document.createElement("tr");for(const value of [e.time,`${e.source} → ${e.target??"场景"}`]){const td=document.createElement("td");td.textContent=value;row.append(td)}const td=document.createElement("td"),pre=document.createElement("pre");pre.textContent=JSON.stringify(e.payload??e,null,2);td.append(pre);row.append(td);$("events").append(row)}show();
+}
+runs.forEach((r,i)=>{const o=document.createElement("option");o.value=i;o.textContent=scenarioNames[r.scenario]??r.scenario;$("scenario").append(o)});$("scenario").value=Math.max(0,runs.findIndex(r=>r.scenario==="mapping_session"));
+$("scenario").onchange=select;$("step").oninput=()=>{stop();show()};$("jump").onchange=()=>go(Number($("jump").value));$("previous").onclick=()=>go(Number($("step").value)-1);$("next").onclick=()=>go(Number($("step").value)+1);$("play").onclick=play;$("speed").onchange=()=>{if(timer){stop();play()}};
+document.addEventListener("keydown",e=>{if(["INPUT","SELECT","TEXTAREA","BUTTON","SUMMARY"].includes(e.target.tagName)||e.altKey||e.ctrlKey||e.metaKey)return;if(e.key==="ArrowRight"||e.key==="ArrowLeft"){e.preventDefault();go(Number($("step").value)+(e.key==="ArrowRight"?1:-1))}});select();
+</script>
+</html>

@@ -1,0 +1,19 @@
+{
+  "name": "pause_and_timeout",
+  "description": "协议边界示例：重复上层命令、暂停后的迟到完成、恢复准备时模块无反馈。",
+  "duration": 2,
+  "feedback": "scripted",
+  "steps": [
+    {"at": 0, "command": {"command_id": "work-2", "type": "START_MOWING", "params": {"map_id": "garden", "region_ids": ["region-1"]}}},
+    {"at": 0.1, "status": {"module": "perception", "revision": 1, "sequence": 1, "stamp": 0.1, "state": "READY"}},
+    {"at": 0.1, "status": {"module": "map_manager", "revision": 1, "sequence": 1, "stamp": 0.1, "state": "READY"}},
+    {"at": 0.1, "status": {"module": "pnc", "revision": 1, "sequence": 1, "stamp": 0.1, "state": "READY"}},
+    {"at": 0.2, "status": {"module": "pnc", "revision": 2, "sequence": 2, "stamp": 0.2, "state": "SUCCEEDED"}, "delay": 0.25},
+    {"at": 0.3, "command": {"command_id": "pause-1", "type": "PAUSE"}},
+    {"at": 0.4, "command": {"command_id": "work-2", "type": "START_MOWING", "params": {"map_id": "garden", "region_ids": ["region-1"]}}},
+    {"at": 0.5, "label": "旧完成被忽略，重复命令返回原受理版本", "expect": {"directive": {"revision": 3, "mode": "PAUSED"}, "command_result": {"command_id": "work-2", "state": "ACCEPTED", "revision": 1}, "brain_status": {"task": {"completed_targets": []}}}},
+    {"at": 0.6, "command": {"command_id": "resume-1", "type": "RESUME"}},
+    {"at": 0.7, "label": "恢复必须重新准备", "expect": {"directive": {"revision": 4, "phase": "PREPARE"}}},
+    {"at": 1.8, "label": "缺少新版本状态导致超时停止", "expect": {"directive": {"revision": 5, "mode": "ERROR", "mission": null}}}
+  ]
+}
