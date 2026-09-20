@@ -113,6 +113,8 @@ status 只汇报结果/事实，不要求 brain 采取某项未来决策。位�
 
 状态变化立即报告，执行期间周期报告。此仿真周期 0.1 秒，超时 1 秒；这些不是实机指标。revision 不匹配、stamp 过期/来自未来、sequence 重复或倒序的状态不推进业务。
 
+每次合法输入处理前与独立 tick 都检查已发生的超时，超时边界为 elapsed > timeout。截止时间之后的新心跳不能覆盖旧时间戳来补救超时。首次发现超时的同次普通命令会被拒绝并下发 ERROR，需要后续新的 RESET_ERROR 请求解除锁存；重复命令仍返回原 ACK，同时可产生独立的超时 ERROR 指令。
+
 ## 3. 上层 → Brain：command
 
 上层表达业务意图，不直接设置 mode / phase，不直接命令三个算法模块。
@@ -201,6 +203,19 @@ brain_status 是向上提供的当前业务快照：
 
 modules 保存各模块**当前 revision 下已收到的有效 status**；null 表示还没有本版本反馈，不表示故障。上例是新 revision 发出、反馈尚未到达时的合法快照。
 
+新增 `health` 观测字段，由 Health / Event Manager 生成，现有字段保留：
+
+| 字段 | 含义 |
+| --- | --- |
+| revision / low_battery | 当前控制版本与去重后的电量事实 |
+| capabilities | navigation、manual_drive、mapping、map_commit 各自的 state、reason、causes |
+| causes | 当前版本的证据不足、过期或模块失败原因，包含 module、reason、revision、stamp |
+| modules | 各模块最后被接受的 status、received_at、fresh、current；没有历史时不包含该模块 |
+
+能力结论目前为 AVAILABLE / UNAVAILABLE，只针对当前 Action。未请求的能力为 UNAVAILABLE / NOT_REQUESTED；缺少有效依赖证据为 UNAVAILABLE / INSUFFICIENT_EVIDENCE。不会推断未请求能力或 DEGRADED。导航与手动控制依赖三模块；建图能力依赖 perception 与 map_manager；提交能力单独依赖 map_manager。模块有效状态为 READY / RUNNING / SUCCEEDED，STOPPED 不构成能力可用证据。AVAILABLE 不代替准备阶段的三方 READY 确认，也不直接授权执行；当前 Brain 的故障锁存规则仍然生效。
+
+health.modules 可保留上一版本诊断证据，current=false 的记录不用于当前准备或完成判断。当前没有足够证据进行跨模块根因推断，保留各模块原因。所有返回快照与内部可变数据隔离。
+
 任务完成后 task 为 null，last_task_result 变为 `{"task_id":"work-1","result":"completed"}`；取消则为 cancelled。暂停/错误中保留 task，低电抢占时原任务进入 suspended_task。完整业务历史目前只在 brain 与仿真观察数据中保存，last_task_result 只是最近一个结果，不是可靠事件订阅服务。
 
 ## 6. 目前示例策略，后续按业务迭代
@@ -210,6 +225,7 @@ modules 保存各模块**当前 revision 下已收到的有效 status**；null �
 - 暂停保留已完成目标；当前未完成区域重新执行，不是轨迹级续作。
 - 低电抢占覆盖任务去回充，电量恢复后等待显式续作。
 - 普通暂停/取消不打断地图 COMMIT；真实提交 ACK 丢失的幂等查询尚未实现。
+- 区域/通道 COMMIT 期间低电，成功提交后只记录一次对象进度，进入 PAUSED；电量恢复后仍需显式 RESUME，恢复目标为遥控转场。最终 SAVE_MAP 成功则结束会话并 IDLE。
 
 这些用于验证接口，不提前确定最终业务政策。例如“阻塞是否重试”“主动回充是否抢占”“启动需哪些模块 READY”，由你提供业务后在 brain 中修改，并在独立 JSON 场景中增加正常/异常期望。
 

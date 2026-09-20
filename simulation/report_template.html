@@ -10,11 +10,43 @@
 @media(max-width:1050px){main{padding:16px}.stage{grid-template-columns:minmax(0,1fr)}.main-stage{border-right:0}.side{border-top:1px solid var(--line);display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px}.receipt{border-top:0;padding-top:0}.diagram{max-height:470px}.header{align-items:flex-start}}
 @media(max-width:650px){.header{display:block}.header label{display:block;margin-top:12px}.side,.details-grid{grid-template-columns:1fr}.controls{flex-wrap:wrap}#counter{min-width:auto}.toolbar{gap:10px}#jump{max-width:250px}.message{height:350px;padding:12px;grid-template-columns:1fr;grid-template-rows:104px minmax(0,1fr);gap:10px}.message-json{border-left:0;border-top:1px solid #cfdddc;padding:8px 0 0}#headline{font-size:18px}.legend{flex-wrap:wrap;gap:5px 16px}}
 </style>
+<style>
+[hidden]{display:none!important}.view-switch{display:flex;gap:8px;margin:14px 0}.view-switch button[aria-pressed="true"]{background:var(--ink);color:white;border-color:var(--ink)}.inside{margin-top:12px;background:white;border:1px solid var(--line)}.inside-head{padding:18px 22px;border-bottom:1px solid var(--line);background:#f0f6f5}.inside-head h2{font-size:22px;margin:4px 0}.inside-head p{color:var(--muted)}.inside-grid{display:grid;grid-template-columns:1fr 1.25fr 1fr;gap:0}.inside-col{padding:20px;min-width:0}.inside-col+.inside-col{border-left:1px solid var(--line)}.inside-title{font-size:12px;letter-spacing:1px;color:var(--teal);margin-bottom:14px;font-weight:700}.layer{border:1px solid var(--line);border-left:3px solid var(--teal);padding:14px;margin-bottom:12px}.layer h3{font-size:16px;margin:0 0 8px}.layer p{margin:6px 0;font-size:13px;overflow-wrap:anywhere}.layer.planned{border:1px dashed #a5b4bf;border-left:3px dashed #a5b4bf;background:#f6f8fa}.impl{font-size:11px;color:var(--teal);font-weight:400;display:block;margin-top:3px}.planned .impl{color:var(--muted)}.flow-down{color:var(--muted);text-align:center;font-size:12px;margin:-4px 0 8px}.cap-row{padding:8px 0;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:10px;font-size:13px}.cap-row strong{font-weight:500}.cap-row small{display:block;color:var(--muted);font-size:11px}.inside ul{padding-left:18px;font-size:13px}.inside li{margin:5px 0;overflow-wrap:anywhere}.inside .facts{grid-template-columns:70px 1fr}.inside pre{font-size:12px;margin-bottom:0}.trace-note{padding:12px 22px;border-top:1px solid var(--line);font-size:12px;color:var(--muted)}.tree{white-space:pre-wrap;font:12px/1.8 Consolas,"Microsoft YaHei",monospace;color:#64767c}.decision-result{font-size:17px!important;color:var(--blue)}
+@media(max-width:1000px){.inside-grid{grid-template-columns:1fr 1fr}.inside-col:last-child{grid-column:1/-1;border-left:0;border-top:1px solid var(--line)}}
+@media(max-width:650px){.inside-grid{grid-template-columns:1fr}.inside-col+.inside-col{border-left:0;border-top:1px solid var(--line)}.inside-head{padding:16px}.inside-col{padding:16px}}
+</style>
 <main>
   <header class="header"><div><div class="eyebrow">BRAIN / INTERACTION REPLAY</div><h1>业务交互，一步一步看</h1><p class="intro" id="description"></p></div><label>场景 <select id="scenario" aria-label="选择仿真场景"></select></label></header>
+  <div class="view-switch" role="group" aria-label="回放视角"><button id="view-brain" aria-pressed="true" aria-controls="inside">Brain 内部</button><button id="view-modules" aria-pressed="false" aria-controls="outside">模块交互</button></div>
   <div class="toolbar"><div class="controls"><button id="previous" title="键盘 ←">上一步</button><button id="play">自动播放</button><button id="next" title="键盘 →">下一步</button><output id="counter"></output></div><div class="controls"><label>跳转 <select id="jump" aria-label="跳转到业务动作"></select></label><label>节奏 <select id="speed"><option value="1600">正常</option><option value="3000">慢速</option><option value="700">快速</option></select></label></div></div>
   <div class="scrub"><input id="step" type="range" min="0" value="0" step="1" aria-label="交互步骤"><output class="mono" id="time"></output></div>
-  <section class="stage" aria-label="固定位置的模块交互流程图">
+  <section class="inside" id="inside" aria-label="Brain 内部设计与真实运行状态">
+    <header class="inside-head"><div class="eyebrow">BRAIN / INSIDE</div><h2 id="inside-action"></h2><p id="inside-change" aria-live="polite"></p></header>
+    <div class="inside-grid" id="inside-grid">
+      <div class="inside-col"><div class="inside-title">事实输入 → 状态整理</div>
+        <article class="layer"><h3>Health / Event Manager<span class="impl">已实现 · 缓存、过滤、去重与能力融合</span></h3><p id="inside-battery"></p><div id="inside-capabilities"></div><p class="muted">能力仅评价当前动作；未请求不等于模块故障，可用也不代替就绪确认。</p></article>
+        <h2>本版本证据</h2><ul id="inside-causes"></ul>
+        <details><summary>查看本次输入</summary><pre id="inside-input"></pre></details>
+      </div>
+      <div class="inside-col"><div class="inside-title">业务决策 → 当前任务</div>
+        <article class="layer"><h3>第一层 · Mode<span class="impl">现有模式分支已运行 · 独立 Mode 状态机待拆分</span></h3><p class="decision-result" id="inside-mode"></p><p id="inside-context"></p><p class="muted">目标设计：IDLE / MAPPING / WORKING / RETURN_TO_CHARGE / CHARGING。当前代码仍以 PAUSED / ERROR 表达暂停与故障。</p></article>
+        <div class="flow-down">↓ 管理任务顺序与模式切换</div>
+        <article class="layer"><h3>第二层 · Mission<span class="impl">任务与建图会话已运行 · 统一生命周期待实现</span></h3><p id="inside-task"></p><p id="inside-progress"></p><p id="inside-suspended"></p><p id="inside-phase"></p><p class="muted">目标生命周期：PREPARE → RUNNING → SUCCESS / FAILED；中断保留 PAUSED。下方显示的是实际 Action 阶段，不伪造 Mission 生命周期。</p></article>
+        <div class="flow-down">↓ 简单阶段直接处理；复杂阶段按需使用树</div>
+        <article class="layer planned"><h3>第三层 · 可选行为树<span class="impl">设计预览 · 尚未执行，不代表运行轨迹</span></h3><div class="tree">建边界阶段的候选选择顺序
+├ 动作不可用 → 请求停止
+├ 区域闭合 → 请求提交
+├ 手动意图 → 遥控采集
+└ 自动意图 → 自动沿边</div><p>读取 Health 与 Mission 的只读快照，输出动作意图。简单覆盖与回充保持小状态机。</p></article>
+      </div>
+      <div class="inside-col"><div class="inside-title">确认条件 → 统一输出</div>
+        <article class="layer"><h3>当前确认条件<span class="impl">已实现 · 使用当前版本的有效反馈</span></h3><p id="inside-gate"></p><ul id="inside-ready"></ul></article>
+        <article class="layer"><h3>动作输出<span class="impl">已实现 · 统一生成 directive 与 revision</span></h3><p class="decision-result" id="inside-output"></p><p id="inside-reason"></p><p id="inside-result"></p><pre id="inside-directive"></pre></article>
+        <details><summary>查看真实 Brain 快照</summary><pre id="inside-snapshot"></pre></details>
+      </div>
+    </div><p class="trace-note" id="inside-trace"></p>
+  </section>
+  <section class="stage" id="outside" hidden aria-label="固定位置的模块交互流程图">
     <div class="main-stage"><div class="message"><div class="message-copy" aria-live="polite"><div id="direction"></div><div id="headline"></div><p id="explanation"></p></div><div class="message-json"><div class="payload-heading"><strong id="payload-kind"></strong><span>本步实际消息</span></div><pre id="payload" tabindex="0" aria-label="当前步骤的完整 JSON 消息"></pre></div></div>
     <div class="diagram-scroll"><svg class="diagram" viewBox="0 0 900 520" role="img" aria-labelledby="diagram-title diagram-description">
       <title id="diagram-title">上层、brain 与三个平行算法模块</title><desc id="diagram-description">高亮箭头表示当前步骤传递的消息；模块位置始终固定。</desc>
@@ -59,7 +91,7 @@ function statusIgnored(p,d,statuses,issuedAt,now,timeout){const last=statuses[p.
 // Walk the event log in delivery order. Equal timestamps must never reveal a later decision.
 function buildSteps(r){
   let d={revision:0,mode:"IDLE",phase:"NONE",mission:null},statuses={},moduleStates={},operator="等待操作",receipt="尚无回执",position=null,issuedAt=0;
-  const result=[],seen=new Map(),commandById=new Map();
+  const result=[],seen=new Map(),commandById=new Map();let brain=null,brainEvent=null;
   const initial=r.frames[0];
   for(const name of modules){
     const observed=initial?.modules?.[name];
@@ -67,6 +99,7 @@ function buildSteps(r){
       moduleStates[name]={state:observed.state,revision:0,sequence:0,stamp:initial.time};
   }
   r.events.forEach((e,eventIndex)=>{
+    if(e.brain_after){brain=e.brain_after;brainEvent=eventIndex}
     const p=e.payload??e;let ignored=false,keep=true;
     if(e.action==="mode_mission"){d=copy(p);statuses={};issuedAt=e.time}
     if(e.action==="command"||e.action==="event"){operator=commandName(p);if(p.command_id)commandById.set(p.command_id,operator)}
@@ -83,7 +116,7 @@ function buildSteps(r){
       if(p.stamp<=e.time&&(!previous||(p.revision>=previous.revision&&p.sequence>previous.sequence&&p.stamp>=previous.stamp)))
         moduleStates[p.module]=copy(p);
     }
-    if(keep)result.push({event:e,eventIndex,d:copy(d),statuses:copy(statuses),moduleStates:copy(moduleStates),operator,receipt,position:copy(position),ignored});
+    if(keep)result.push({event:e,eventIndex,d:copy(d),statuses:copy(statuses),moduleStates:copy(moduleStates),operator,receipt,position:copy(position),ignored,brain,brainEvent});
   });
   return result;
 }
@@ -119,6 +152,43 @@ function drawMap(s){
   const pos=s.position??f.position;if(pos){const[cx,cy]=xy(pos);add("circle",{cx,cy,r:4,fill:"#203a43"})}
   $("map-time").textContent=`地图采样 ${Number(f.time??0).toFixed(2)} s · 黑点为模拟位置`;
 }
+function showInside(s){
+  const e=s.event,p=e.payload??e,b=s.brain,previous=e.brain_before;
+  $("inside-action").textContent=describe(s).title;
+  $("inside-input").textContent=JSON.stringify(p,null,2);
+  $("inside-grid").hidden=!b;
+  if(!b){$("inside-change").textContent="此步骤尚无 Brain 决策快照，请前进到第一条输入。";$("inside-trace").textContent="没有使用后续帧推测当前状态。";return}
+  const state=b.public_status,d=b.directive,h=state.health;
+  $("inside-change").textContent=previous?(previous.directive.revision!==d.revision?`本次处理：第 ${previous.directive.revision} 版 → 第 ${d.revision} 版 · ${modes[d.mode]} / ${phases[d.phase]}`:"本次处理没有改变控制版本；下方显示处理后的实际状态。"):"下方显示最近一次真实决策快照；与共享时间线同步。";
+  $("inside-mode").textContent=`${d.mode} · ${modes[d.mode]??d.mode}`;
+  $("inside-context").textContent=state.mapping?`保留建图会话 ${state.mapping.session_id}`:state.task?`保留业务请求 ${state.task.task_id}`:"当前没有活动业务上下文";
+  $("inside-task").textContent=state.mapping?`当前对象：${missionName(state.mapping.current)}`:state.task?`当前目标：${targetName(state.task.current_target)}`:"没有活动任务";
+  $("inside-progress").textContent=state.mapping?`已提交区域：${state.mapping.regions.join("、")||"无"}；通道：${state.mapping.channels.join("、")||"无"}`:state.task?`已完成 ${state.task.completed_targets.length} / ${state.task.total_targets} 个目标`:state.last_task_result?`最近任务结果：${state.last_task_result.result}`:"等待上层开始业务";
+  $("inside-suspended").textContent=state.suspended_task?`挂起任务：${state.suspended_task.task_id} · 已完成 ${state.suspended_task.completed_targets.length} 个目标`:"挂起任务：无";
+  $("inside-phase").textContent=`实际 Action：${d.phase} · ${phases[d.phase]}`;
+  $("inside-battery").textContent=h?.low_battery?"电量事实：低电已锁存":"电量事实：无低电锁存";
+  $("inside-capabilities").replaceChildren();
+  const capabilityNames={navigation:"导航",manual_drive:"手动控制",mapping:"建图",map_commit:"地图提交"};
+  for(const [name,c] of Object.entries(h?.capabilities??{})){
+    const row=document.createElement("div");row.className="cap-row";
+    const label=document.createElement("span");label.textContent=capabilityNames[name]??name;
+    const value=document.createElement("strong");value.textContent=c.state==="AVAILABLE"?"可用":c.reason==="NOT_REQUESTED"?"本步未请求":"不可用 / 证据不足";
+    value.className=c.state==="AVAILABLE"?"pass":"muted";row.append(label,value);$("inside-capabilities").append(row);
+  }
+  const list=(id,items)=>{$(id).replaceChildren();for(const text of items){const li=document.createElement("li");li.textContent=text;$(id).append(li)}};
+  const causeName={NO_CURRENT_STATUS:"尚无本版本反馈",STATUS_TIMEOUT:"反馈超时"};
+  list("inside-causes",h?.causes?.length?h.causes.map(c=>`${c.module}：${causeName[c.reason]??why(c.reason)}`):["本版本没有缺失、过期或失败证据"]);
+  const ready=modules.filter(n=>state.modules[n]?.state==="READY").length;
+  $("inside-gate").textContent=d.phase==="PREPARE"?`准备屏障：${ready} / 3 模块 READY`:d.phase==="COMMIT"?"提交完成方：map_manager；收到本版本 SUCCEEDED 才记入进度":d.phase==="EXECUTE"?(state.mapping?"建图：等待用户操作或有效闭合事实，由业务分支决定下一步":"目标完成方：PNC；收到本版本 SUCCEEDED 才推进目标"):"当前不执行动作；暂停或故障不会因健康恢复而自动续作";
+  list("inside-ready",modules.map(n=>`${n}：${state.modules[n]?`${states[state.modules[n].state]??state.modules[n].state} · 第 ${state.modules[n].revision} 版`:"未收到本版本反馈"}`));
+  $("inside-output").textContent=missionName(d.mission);
+  $("inside-reason").textContent=b.reason?`业务原因：${why(b.reason)}`:"业务原因：无暂停或故障原因";
+  $("inside-result").textContent=["command","event","command_result"].includes(e.action)&&b.last_event?`本次受理：${b.last_event.accepted?"接受":"拒绝"}${b.last_event.reason?" · "+why(b.last_event.reason):""}`:`控制版本：${d.revision}`;
+  $("inside-directive").textContent=JSON.stringify(d,null,2);$("inside-snapshot").textContent=JSON.stringify(b,null,2);
+  $("inside-trace").textContent=`证据：原始记录第 ${s.brainEvent+1} 条的 Brain 快照。${e.brain_before?"当前展示这条输入处理完成后的状态；模块交互视角仍按消息交付顺序显示随后下发的指令。":"环境变化本身不代表 Brain 已处理；仅展示不晚于当前记录的快照。"} 实线为已有实现，虚线行为树仅为设计预览。`;
+}
+function setView(internal){$("inside").hidden=!internal;$("outside").hidden=internal;$("view-brain").setAttribute("aria-pressed",String(internal));$("view-modules").setAttribute("aria-pressed",String(!internal))}
+$("view-brain").onclick=()=>setView(true);$("view-modules").onclick=()=>setView(false);
 function show(){
   const index=Number($("step").value),s=steps[index];if(!s)return;const e=s.event,p=e.payload??e,d=s.d,desc=describe(s);
   $("counter").textContent=`第 ${index+1} / ${steps.length} 步`;$("time").textContent=`${e.time.toFixed(2)} s`;$("previous").disabled=index===0;$("next").disabled=index===steps.length-1;
@@ -142,7 +212,7 @@ function show(){
   else {active("node-world");if(e.action==="position"){active("world-wire");active("node-perception")}else if(p.module)active("node-"+p.module)}
   $("payload-kind").textContent=e.action==="mode_mission"?"directive":e.action;
   $("payload").textContent=JSON.stringify(p,null,2);$("payload").scrollTop=0;$("payload").scrollLeft=0;
-  $("raw").textContent=JSON.stringify(e,null,2);$("directive").textContent=JSON.stringify(d,null,2);drawMap(s);
+  $("raw").textContent=JSON.stringify(e,null,2);$("directive").textContent=JSON.stringify(d,null,2);drawMap(s);showInside(s);
   const milestone=Array.from($("jump").options).filter(o=>Number(o.value)<=index).at(-1);if(milestone)$("jump").value=milestone.value;
 }
 function stop(){clearInterval(timer);timer=null;$("play").textContent="自动播放"}

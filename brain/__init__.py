@@ -1,6 +1,9 @@
 """Business state machine. Inputs: Event / Status. Output: mode + current mission."""
 from dataclasses import asdict, dataclass, field, replace
+from copy import deepcopy
 import math
+
+from brain.health import HealthEventManager
 
 from contracts import Directive, Event, EventKind, Mission, MissionKind, Module, Mode, Phase, State, Status, WorkItem, MissionType, command_event, system_event, identifier, Control
 
@@ -30,27 +33,31 @@ class MappingSession:
     def view(self):
         return {"session_id": self.session_id, "map_id": self.map_id,
                 "regions": list(self.regions), "channels": list(self.channels),
-                "current": self.current.to_dict(), "last_result": self.last_result}
+                "current": self.current.to_dict(), "last_result": deepcopy(self.last_result)}
 
 
 class Brain:
     def __init__(self, status_timeout=1.0):
-        if not math.isfinite(status_timeout) or status_timeout <= 0:
-            raise ValueError("status_timeout must be positive and finite")
-        self.status_timeout = status_timeout
+        self.health = HealthEventManager(status_timeout)
         self.directive = Directive(0, Mode.IDLE, Phase.NONE, None)
+        self.health.begin(self.directive, 0.0)
         self.task = None
         self.mapping = None
         self.suspended = None
-        self.statuses = {}
         self.history = []
-        self.events = {}
         self.used_missions = set()
-        self.low_battery = False
         self.reason = ""
         self.last_result = None
         self.last_command_result = None
-        self.now = self.issued_at = 0.0
+        self.now = 0.0
+
+    @property
+    def statuses(self):
+        return self.health.statuses
+
+    @property
+    def low_battery(self):
+        return self.health.low_battery
 
 
     def receive(self, kind, payload, now):
@@ -64,7 +71,7 @@ class Brain:
             try:
                 event = command_event(payload)
             except ValueError as error:
-                directive = None
+                directive = self.tick(now)
                 acknowledgement = {"command_id": payload["command_id"], "state": "REJECTED",
                     "revision": self.directive.revision, "reason": "INVALID_COMMAND", "message": str(error)}
             else:
@@ -84,7 +91,7 @@ class Brain:
         else:
             raise ValueError(f"unsupported input channel: {kind}")
         return {"directive": directive.to_dict() if directive else None,
-                "command_result": acknowledgement, "brain_status": self.status()}
+                "command_result": deepcopy(acknowledgement), "brain_status": self.status()}
 
     def status(self):
         """Upper-layer observation; task IDs never leak into algorithm directives."""
@@ -95,13 +102,13 @@ class Brain:
                     "completed_targets": list(task.mission.targets[:task.cursor]),
                     "total_targets": len(task.mission.targets),
                     "current_target": task.mission.targets[task.cursor]}
-        last = self.history[-1] if self.history else None
+        last = deepcopy(self.history[-1]) if self.history else None
         return {"revision": self.directive.revision, "mode": self.directive.mode.value,
                 "phase": self.directive.phase.value, "task": task_status(self.task),
                 "mapping": self.mapping.view() if self.mapping else None,
                 "suspended_task": task_status(self.suspended),
                 "last_task_result": {"task_id": last["mission_id"], **{key: value for key, value in last.items() if key != "mission_id"}} if last else None,
-                "reason": self.reason or None,
+                "reason": self.reason or None, "health": self.health.snapshot(self.now),
                 "modules": {module.value: self.statuses[module].to_dict() if module in self.statuses else None
                             for module in Module}}
 
@@ -112,14 +119,13 @@ class Brain:
 
     def _issue(self, mode, phase=Phase.NONE, reason=""):
         self.reason = reason
-        self.issued_at = self.now
-        self.statuses.clear()
         # Paused/faulted algorithms receive no executable mission or hidden checkpoint.
         item = self.task.current() if self.task and phase != Phase.NONE else None
         if self.mapping and mode == Mode.MAPPING:
             item = self.mapping.current
             self.mapping.phase = phase
         self.directive = Directive(self.directive.revision + 1, mode, phase, item)
+        self.health.begin(self.directive, self.now)
         return self.directive
 
     def _prepare(self):
@@ -137,24 +143,27 @@ class Brain:
 
     def handle(self, message, now):
         self._clock(now)
-        if isinstance(message, Status):
-            return self._status(message)
-        if not isinstance(message, Event):
+        if not isinstance(message, (Event, Status)):
             raise TypeError("brain accepts only Event or Status")
-        previous = self.events.get(message.event_id)
-        if previous:
-            self.last_result = previous[1] if previous[0] == message else {
-                "event_id": message.event_id, "accepted": False, "reason": "event_id reused", "revision": self.directive.revision}
-            return None
+        timeout = self.tick(now)
+        if isinstance(message, Status):
+            return timeout or self._status(message)
+        previous = self.health.previous_event(message)
+        if previous is not None:
+            self.last_result = previous
+            return timeout
         try:
+            if timeout and message.kind not in (EventKind.LOW_BATTERY, EventKind.BATTERY_OK):
+                raise ValueError("status timeout; fault must be acknowledged by a subsequent RESET")
+            self.health.observe_event(message)
             output = self._event(message)
             result = {"event_id": message.event_id, "accepted": True, "reason": "", "revision": self.directive.revision}
         except ValueError as error:
             output = None
             result = {"event_id": message.event_id, "accepted": False, "reason": str(error), "revision": self.directive.revision}
         self.last_result = result
-        self.events[message.event_id] = (message, result)
-        return output
+        self.health.remember_event(message, result)
+        return output or timeout
 
     def _event(self, event):
         kind, mode = event.kind, self.directive.mode
@@ -198,7 +207,6 @@ class Brain:
             self.task = self.suspended = None
             return self._issue(Mode.IDLE)
         if kind == EventKind.LOW_BATTERY:
-            self.low_battery = True
             if mode in (Mode.IDLE, Mode.ERROR, Mode.CHARGING, Mode.RETURNING):
                 return None
             if self.mapping:
@@ -215,7 +223,6 @@ class Brain:
                 return None  # Finish atomic map commit; battery latch prevents the next job.
             return self._issue(Mode.PAUSED, reason="low battery")
         if kind == EventKind.BATTERY_OK:
-            self.low_battery = False
             if mode == Mode.CHARGING:
                 self.task, self.suspended = self.suspended, None
                 return self._issue(Mode.PAUSED if self.task else Mode.IDLE,
@@ -304,21 +311,18 @@ class Brain:
         collection.append(current.target_id)
         self.mapping.last_result = {"type": current.type.value, "target_id": current.target_id,
                                     "result": "completed"}
+        if self.low_battery:
+            self.mapping.current = WorkItem(MissionType.MANUAL_DRIVE, self.mapping.map_id, None, Control.MANUAL)
+            self.mapping.phase = Phase.PREPARE
+            return self._issue(Mode.PAUSED, reason="low battery")
         return self._mapping_manual()
 
     def _status(self, status):
         d = self.directive
-        previous = self.statuses.get(status.module)
-        if (status.revision != d.revision or status.stamp < self.issued_at
-                or not 0 <= self.now - status.stamp <= self.status_timeout
-                or (previous and (status.sequence <= previous.sequence or status.stamp < previous.stamp))):
+        if not self.health.accept(status, self.now):
             return None
-        self.statuses[status.module] = status
         if d.phase == Phase.NONE:
             return None
-        timeout = self.tick(self.now)
-        if timeout:
-            return timeout
         if (self.mapping and d.phase == Phase.PREPARE
                 and self.mapping.current.type == MissionType.MAP_CHANNEL
                 and status.module == Module.MAP_MANAGER and status.state == State.REJECTED
@@ -329,8 +333,7 @@ class Brain:
         if status.state in (State.FAILED, State.BLOCKED, State.REJECTED):
             return self._issue(Mode.ERROR, reason=f"{status.module}: {status.reason or status.state}")
         if d.phase == Phase.PREPARE:
-            if all(self.statuses.get(module) and self.statuses[module].state == State.READY
-                   for module in Module):
+            if self.health.ready(self.now):
                 return self._issue(d.mode, Phase.EXECUTE)
             return None
         if self.mapping:
@@ -346,12 +349,9 @@ class Brain:
     def tick(self, now):
         """Clock input is supplied by the host, including when all modules are silent."""
         self._clock(now)
-        if self.directive.phase == Phase.NONE:
-            return None
-        for module in Module:
-            stamp = self.statuses[module].stamp if module in self.statuses else self.issued_at
-            if now - stamp > self.status_timeout:
-                return self._issue(Mode.ERROR, reason=f"{module}: status timeout")
+        expired = self.health.expired(now)
+        if expired:
+            return self._issue(Mode.ERROR, reason=f"{expired[0]}: status timeout")
         return None
 
     def view(self):
@@ -361,5 +361,5 @@ class Brain:
                                                "current": task.mission.targets[task.cursor]}
         return {"directive": self.directive.to_dict(), "task": task_view(self.task),
                 "suspended": task_view(self.suspended), "reason": self.reason,
-                "low_battery": self.low_battery, "history": list(self.history),
-                "last_event": self.last_result, "public_status": self.status()}
+                "low_battery": self.low_battery, "history": deepcopy(self.history),
+                "last_event": deepcopy(self.last_result), "public_status": self.status()}

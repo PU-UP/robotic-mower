@@ -148,6 +148,47 @@ class MappingTests(unittest.TestCase):
                             if f["modules"]["pnc"]["revision"] == f["brain"]["directive"]["revision"]
                             and f["brain"]["directive"]["phase"] == "PREPARE"))
 
+    def test_low_battery_during_object_commit_pauses_after_counting_once(self):
+        for kind in ("region", "channel"):
+            with self.subTest(kind=kind):
+                self.setUp()
+                self.start_region()
+                if kind == "region":
+                    self.feedback(Module.MAP_MANAGER, State.RUNNING, signal="REGION_CLOSED")
+                else:
+                    self.close_region()
+                    self.command("START_CHANNEL", channel_id="c1")
+                    self.ready()
+                    self.command("FINISH_CHANNEL")
+                revision = self.brain.directive.revision
+                self.brain.receive("event", {"event_id": "low", "type": "LOW_BATTERY"}, self.now)
+                self.assertEqual(self.brain.directive.phase, Phase.COMMIT)
+                self.feedback(Module.MAP_MANAGER, State.SUCCEEDED)
+                self.feedback(Module.MAP_MANAGER, State.SUCCEEDED, revision=revision)
+                self.assertEqual(self.brain.directive.mode, "PAUSED")
+                self.assertIsNone(self.brain.directive.mission)
+                self.assertEqual(self.brain.mapping.regions, ["r1"])
+                self.assertEqual(self.brain.mapping.channels, ["c1"] if kind == "channel" else [])
+                self.assertEqual(self.command("RESUME")["command_result"]["state"], "REJECTED")
+                self.brain.receive("event", {"event_id": "charged", "type": "BATTERY_OK"}, self.now)
+                self.assertEqual(self.brain.directive.mode, "PAUSED")
+                self.command("RESUME")
+                self.assertEqual(self.brain.directive.phase, Phase.PREPARE)
+                self.assertEqual(self.brain.directive.mission.type, "MANUAL_DRIVE")
+
+    def test_mapping_result_and_history_snapshots_are_detached(self):
+        self.start_region()
+        self.close_region()
+        self.brain.status()["mapping"]["last_result"]["result"] = "changed"
+        self.assertEqual(self.brain.mapping.last_result["result"], "completed")
+        self.command("FINISH_MAPPING")
+        self.brain.receive("event", {"event_id": "low", "type": "LOW_BATTERY"}, self.now)
+        self.feedback(Module.MAP_MANAGER, State.SUCCEEDED)
+        self.assertEqual(self.brain.directive.mode, "IDLE")
+        self.brain.status()["last_task_result"]["regions"].clear()
+        self.brain.view()["history"][-1]["regions"].clear()
+        self.assertEqual(self.brain.history[-1]["regions"], ["r1"])
+
     def test_channel_origin_uses_polygon_not_bounding_box(self):
         world = BusinessMap("map", 1, "slam", "map", (
             Entity("r", "region", ((0, 0), (4, 0), (4, 1), (1, 1), (1, 4), (0, 4))),))

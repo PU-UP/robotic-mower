@@ -2,7 +2,7 @@
 
 brain 管理完整业务逻辑：任务顺序、已完成进度、暂停、抢占、恢复和错误策略。算法同层的数据不穿过 brain。
 
-目标架构见 [Brain 设计：分层状态机 + 按需行为树](DESIGN.md)：Mode 管大业务，Mission 管生命周期与业务阶段，复杂阶段按需使用行为树；独立的 Health / Event Manager 整理模块状态、能力与异常原因。文档包含现有协议的兼容映射与分步迁移方案，运行代码尚未完成该改造。
+目标架构见 [Brain 设计：分层状态机 + 按需行为树](DESIGN.md)：Mode 管大业务，Mission 管生命周期与业务阶段，复杂阶段按需使用行为树。第一步已提取 [Health / Event Manager](health.py)，负责反馈过滤、超时事实、就绪确认、事件去重、低电状态和能力快照；业务决策仍在 Brain。内部 Mode/Mission 拆分与行为树尚未接入。
 
 本轮以 [输入输出协议](PROTOCOL.md) 为准。directive 已按用户提出的结构收敛：
 

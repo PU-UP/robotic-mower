@@ -33,7 +33,8 @@ class Simulation:
     def dispatch(self, directive):
         if directive is None:
             return
-        self.record("brain", "mode_mission", **directive.to_dict(), payload=directive.to_dict(), target="modules", reason=self.brain.reason)
+        self.record("brain", "mode_mission", **directive.to_dict(), payload=directive.to_dict(), target="modules", reason=self.brain.reason,
+                    brain_after=self.brain.view())
         for module in self.modules.values():
             self.env.process(self._command(module, directive))
 
@@ -49,11 +50,15 @@ class Simulation:
         payload = json.loads(json.dumps(payload, allow_nan=False))
         source = payload.get("module", "external") if kind == "status" else "external"
         self.record(source, kind, target="brain", payload=payload)
+        delivery = self.events[-1]
+        delivery["brain_before"] = self.brain.view()
         result = self.brain.receive(kind, payload, self.env.now)
+        delivery["brain_after"] = self.brain.view()
         if result["directive"]:
             self.dispatch(Directive.from_dict(result["directive"]))
         if result["command_result"]:
-            self.record("brain", "command_result", target="external", payload=result["command_result"])
+            self.record("brain", "command_result", target="external", payload=result["command_result"],
+                        brain_after=self.brain.view())
         return result
 
     def inject(self, event):

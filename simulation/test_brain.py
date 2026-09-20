@@ -160,6 +160,22 @@ class BrainTests(unittest.TestCase):
 
 
 class ScenarioTests(unittest.TestCase):
+    def test_replay_snapshots_capture_each_decision_without_future_state(self):
+        sim = Simulation()
+        sim.receive("command", {"command_id": "mapping", "type": "START_MAPPING",
+                                "params": {"map_id": "new"}})
+        delivery, directive, acknowledgement = sim.events
+        self.assertEqual(delivery["brain_before"]["directive"]["mode"], "IDLE")
+        self.assertEqual(delivery["brain_after"]["directive"]["mode"], "MAPPING")
+        self.assertEqual(directive["brain_after"]["directive"], directive["payload"])
+        self.assertEqual(acknowledgement["brain_after"], delivery["brain_after"])
+        sim.receive("command", {"command_id": "pause", "type": "PAUSE"})
+        self.assertEqual(sim.events[-1]["brain_after"]["directive"]["mode"], "PAUSED")
+        self.assertEqual(delivery["brain_after"]["directive"]["mode"], "MAPPING")
+        delivery["brain_after"]["public_status"]["mapping"]["regions"].append("changed")
+        self.assertEqual(directive["brain_after"]["public_status"]["mapping"]["regions"], [])
+        self.assertEqual(sim.brain.mapping.regions, [])
+
     def test_independent_scenarios_are_reproducible_and_pass_acceptance(self):
         for name in SCENARIOS:
             with self.subTest(scenario=name):
