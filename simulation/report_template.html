@@ -53,7 +53,7 @@ let run,steps=[],timer=null;
 const copy=x=>JSON.parse(JSON.stringify(x));
 const targetName=id=>id?String(id).replace(/^region-/,"区域 ").replace(/^channel-/,"通道 ").replace(/^dock$/,"充电站"):"";
 const why=s=>reasons[s]??(s?.includes("status timeout")?`${s.split(":")[0]} 反馈超时`:s??"");
-function missionName(m){if(!m)return "无当前任务";const target=targetName(m.region_id??m.channel_id??m.station_id);return ({MANUAL_DRIVE:"遥控转场",MAP_REGION:`${target} · ${m.control==="AUTO_EDGE"?"自动沿边":"遥控采集"}`,MAP_CHANNEL:`${target} · 遥控采集`,SAVE_MAP:"保存整张地图",COVER_REGION:`${target} · 覆盖作业`,RETURN_HOME:`前往${target||"充电站"}`})[m.type]??m.type}
+function missionName(m){if(!m)return "无当前任务";const target=targetName(m.target_id);return ({MANUAL_DRIVE:"遥控转场",MAP_REGION:`${target} · ${m.control==="AUTO"?"自动沿边":"遥控采集"}`,MAP_CHANNEL:`${target} · 遥控采集`,SAVE_MAP:"保存整张地图",COVER_REGION:`${target} · 覆盖作业`,RETURN_HOME:`前往${target||"充电站"}`})[m.type]??m.type}
 function commandName(p){return [commands[p.type]??p.type,targetName(p.params?.region_id??p.params?.channel_id)].filter(Boolean).join(" · ")}
 function statusIgnored(p,d,statuses,issuedAt,now,timeout){const last=statuses[p.module];return p.revision!==d.revision||p.stamp<issuedAt||now-p.stamp<0||now-p.stamp>timeout||Boolean(last&&(p.sequence<=last.sequence||p.stamp<last.stamp))}
 // Walk the event log in delivery order. Equal timestamps must never reveal a later decision.
@@ -107,7 +107,7 @@ function describe(s){
   else {title=e.action;detail="场景记录";short=e.action}
   return {title,detail,short};
 }
-function job(name,d){const m=d.mission;if(!m)return "按当前模式等待";if(d.phase==="PREPARE")return {perception:"任务：准备定位与感知",map_manager:m.type==="MAP_CHANNEL"?"任务：校验通道起点":"任务：准备地图与目标",pnc:"任务：停止，检查规划输入"}[name];if(d.phase==="COMMIT")return {perception:"任务：保持定位",map_manager:"任务：保存当前采集结果",pnc:"任务：停止运动"}[name];return {perception:m.type==="MAP_REGION"?"任务：定位，检测区域闭环":"任务：提供定位与感知",map_manager:({MAP_REGION:"任务：记录区域边界",MAP_CHANNEL:"任务：记录通道轨迹",MANUAL_DRIVE:"任务：维护业务地图"})[m.type]??"任务：提供地图与目标",pnc:m.type==="MAP_REGION"?(m.control==="AUTO_EDGE"?"任务：自动沿边控制":"任务：遥控运动"):m.type==="MANUAL_DRIVE"||m.type==="MAP_CHANNEL"?"任务：遥控运动":"任务：当前目标规划与控制"}[name]}
+function job(name,d){const m=d.mission;if(!m)return "按当前模式等待";if(d.phase==="PREPARE")return {perception:"任务：准备定位与感知",map_manager:m.type==="MAP_CHANNEL"?"任务：校验通道起点":"任务：准备地图与目标",pnc:"任务：停止，检查规划输入"}[name];if(d.phase==="COMMIT")return {perception:"任务：保持定位",map_manager:"任务：保存当前采集结果",pnc:"任务：停止运动"}[name];return {perception:m.type==="MAP_REGION"?"任务：定位，检测区域闭环":"任务：提供定位与感知",map_manager:({MAP_REGION:"任务：记录区域边界",MAP_CHANNEL:"任务：记录通道轨迹",MANUAL_DRIVE:"任务：维护业务地图"})[m.type]??"任务：提供地图与目标",pnc:m.type==="MAP_REGION"?(m.control==="AUTO"?"任务：自动沿边控制":"任务：遥控运动"):m.type==="MANUAL_DRIVE"||m.type==="MAP_CHANNEL"?"任务：遥控运动":"任务：当前目标规划与控制"}[name]}
 function drawMap(s){
   const e=s.event,frames=run.frames.filter(f=>f.time<=e.time),f=frames.at(-1)??{},svg=$("map");svg.replaceChildren();
   const points=run.frames.flatMap(x=>[x.position??[0,0],...(x.trace??[]),...(x.map?.entities??[]).flatMap(a=>a.points)]);if(!points.length)points.push([0,0]);

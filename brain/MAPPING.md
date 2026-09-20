@@ -6,7 +6,7 @@
 flowchart TD
     A[START_MAPPING] --> B[遥控转场 MANUAL_DRIVE]
     B -->|SELECT_REGION_START| C[记录起点 MAP_REGION / MANUAL]
-    C -->|START_EDGE_FOLLOW| D[自动沿边 MAP_REGION / AUTO_EDGE]
+    C -->|START_EDGE_FOLLOW| D[自动沿边 MAP_REGION / AUTO]
     D -->|TAKE_OVER| C
     D -->|perception 或 map_manager: REGION_CLOSED| E[提交当前区域]
     C -->|同样可报告闭合| E
@@ -26,10 +26,10 @@ flowchart TD
 | --- | --- | --- |
 | 开始建图 | START_MAPPING / map_id | MANUAL_DRIVE / map_id |
 | 遥控到第一块区域 | 摇杆数据走遥控与控制接口，不进入 brain | 保持 MANUAL_DRIVE |
-| 选择区域起点 | SELECT_REGION_START / region_id | MAP_REGION / region_id / control=MANUAL |
-| 开始或继续自动沿边 | START_EDGE_FOLLOW / 无 | 同一个 MAP_REGION，control=AUTO_EDGE |
+| 选择区域起点 | SELECT_REGION_START / region_id | MAP_REGION / target_id / control=MANUAL |
+| 开始或继续自动沿边 | START_EDGE_FOLLOW / 无 | 同一个 MAP_REGION，control=AUTO |
 | 临时遥控接管 | TAKE_OVER / 无 | 同一个 MAP_REGION，control=MANUAL |
-| 到达通道起点，开始通道 | START_CHANNEL / channel_id | MAP_CHANNEL / channel_id，先 PREPARE 校验 |
+| 到达通道起点，开始通道 | START_CHANNEL / channel_id | MAP_CHANNEL / target_id / control=MANUAL，先 PREPARE 校验 |
 | 遥控通道一段后点击结束 | FINISH_CHANNEL / 无 | 当前 MAP_CHANNEL / COMMIT |
 | 遥控到区域2并重复区域操作 | SELECT_REGION_START / region-2 | 新 MAP_REGION，已有区域/通道保留 |
 | 点击结束整次建图 | FINISH_MAPPING / 无 | SAVE_MAP / COMMIT |
@@ -46,8 +46,8 @@ flowchart TD
   "mission": {
     "type": "MAP_REGION",
     "map_id": "new-garden",
-    "region_id": "region-1",
-    "control": "AUTO_EDGE"
+    "target_id": "region-1",
+    "control": "AUTO"
   }
 }
 ```

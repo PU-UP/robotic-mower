@@ -14,9 +14,7 @@ class Task:
         m = self.mission
         kind = {MissionKind.MOW: MissionType.COVER_REGION,
                 MissionKind.RETURN_HOME: MissionType.RETURN_HOME}[m.kind]
-        target = {"station_id": m.targets[self.cursor]} if kind == MissionType.RETURN_HOME else {
-            "region_id": m.targets[self.cursor]}
-        return WorkItem(kind, m.map_id, **target)
+        return WorkItem(kind, m.map_id, m.targets[self.cursor], Control.AUTO)
 
 
 @dataclass
@@ -232,7 +230,7 @@ class Brain:
 
 
     def _mapping_manual(self, reason=""):
-        self.mapping.current = WorkItem(MissionType.MANUAL_DRIVE, self.mapping.map_id)
+        self.mapping.current = WorkItem(MissionType.MANUAL_DRIVE, self.mapping.map_id, None, Control.MANUAL)
         return self._issue(Mode.MAPPING, Phase.PREPARE, reason)
 
     def _mapping_command(self, event):
@@ -247,7 +245,7 @@ class Brain:
                 raise ValueError("session_id already used")
             self.used_missions.add(session_id)
             self.mapping = MappingSession(session_id, event.map_id,
-                                          WorkItem(MissionType.MANUAL_DRIVE, event.map_id))
+                                          WorkItem(MissionType.MANUAL_DRIVE, event.map_id, None, Control.MANUAL))
             return self._prepare()
         if not self.mapping or self.directive.mode != Mode.MAPPING or self.directive.phase != Phase.EXECUTE:
             raise ValueError("mapping command requires an executing mapping session")
@@ -261,16 +259,16 @@ class Brain:
                 if not self.mapping.regions:
                     raise ValueError("a channel requires an existing region")
                 self.mapping.current = WorkItem(MissionType.MAP_CHANNEL, self.mapping.map_id,
-                                                channel_id=event.target_id)
+                                                target_id=event.target_id, control=Control.MANUAL)
             else:
                 self.mapping.current = WorkItem(MissionType.MAP_REGION, self.mapping.map_id,
-                                                region_id=event.target_id, control=Control.MANUAL)
+                                                target_id=event.target_id, control=Control.MANUAL)
             return self._issue(Mode.MAPPING, Phase.PREPARE)
         if kind in (EventKind.START_EDGE_FOLLOW, EventKind.TAKE_OVER):
-            expected = Control.MANUAL if kind == EventKind.START_EDGE_FOLLOW else Control.AUTO_EDGE
+            expected = Control.MANUAL if kind == EventKind.START_EDGE_FOLLOW else Control.AUTO
             if current.type != MissionType.MAP_REGION or current.control != expected:
                 raise ValueError("edge control change requires the matching active region control")
-            control = Control.AUTO_EDGE if expected == Control.MANUAL else Control.MANUAL
+            control = Control.AUTO if expected == Control.MANUAL else Control.MANUAL
             self.mapping.current = replace(current, control=control)
             return self._issue(Mode.MAPPING, Phase.PREPARE)
         if kind == EventKind.FINISH_CHANNEL:
@@ -282,7 +280,7 @@ class Brain:
                 raise ValueError("finish the current region or channel before saving the map")
             if not self.mapping.regions:
                 raise ValueError("cannot save a map without a completed region")
-            self.mapping.current = WorkItem(MissionType.SAVE_MAP, self.mapping.map_id)
+            self.mapping.current = WorkItem(MissionType.SAVE_MAP, self.mapping.map_id, None, Control.NONE)
             return self._issue(Mode.MAPPING, Phase.COMMIT)
         raise ValueError("unsupported mapping command")
 
@@ -325,7 +323,7 @@ class Brain:
                 and self.mapping.current.type == MissionType.MAP_CHANNEL
                 and status.module == Module.MAP_MANAGER and status.state == State.REJECTED
                 and status.reason == "CHANNEL_START_OUTSIDE_REGION"):
-            self.mapping.last_result = {"type": "MAP_CHANNEL", "target_id": self.mapping.current.channel_id,
+            self.mapping.last_result = {"type": "MAP_CHANNEL", "target_id": self.mapping.current.target_id,
                                         "result": "rejected", "reason": status.reason}
             return self._mapping_manual(status.reason)
         if status.state in (State.FAILED, State.BLOCKED, State.REJECTED):

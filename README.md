@@ -37,7 +37,7 @@ flowchart TB
   "revision": 4,
   "mode": "WORKING",
   "phase": "EXECUTE",
-  "mission": {"type": "COVER_REGION", "map_id": "garden", "region_id": "region-2"}
+  "mission": {"type": "COVER_REGION", "map_id": "garden", "target_id": "region-2", "control": "AUTO"}
 }
 ```
 

@@ -29,7 +29,8 @@ class Phase(StrEnum):
 
 class Control(StrEnum):
     MANUAL = "MANUAL"
-    AUTO_EDGE = "AUTO_EDGE"
+    AUTO = "AUTO"
+    NONE = "NONE"
 
 
 class MissionType(StrEnum):
@@ -120,55 +121,41 @@ class Mission:
 
 @dataclass(frozen=True)
 class WorkItem:
-    """Current algorithm goal; recording identity survives control handover."""
+    """Fixed wire shape for the current goal; type determines target semantics."""
     type: MissionType
     map_id: str
-    region_id: str | None = None
-    station_id: str | None = None
-    channel_id: str | None = None
-    control: Control | None = None
+    target_id: str | None
+    control: Control
 
     def __post_init__(self):
         identifier(self.map_id)
         if not isinstance(self.type, MissionType):
             raise ValueError("invalid mission type")
-        required = {
-            MissionType.COVER_REGION: ("region_id",),
-            MissionType.RETURN_HOME: ("station_id",),
-            MissionType.MAP_REGION: ("region_id", "control"),
-            MissionType.MAP_CHANNEL: ("channel_id",),
-            MissionType.MANUAL_DRIVE: (),
-            MissionType.SAVE_MAP: (),
+        allowed = {
+            MissionType.MANUAL_DRIVE: (Control.MANUAL,),
+            MissionType.MAP_REGION: (Control.MANUAL, Control.AUTO),
+            MissionType.MAP_CHANNEL: (Control.MANUAL,),
+            MissionType.SAVE_MAP: (Control.NONE,),
+            MissionType.COVER_REGION: (Control.AUTO,),
+            MissionType.RETURN_HOME: (Control.AUTO,),
         }[self.type]
-        for field in ("region_id", "station_id", "channel_id", "control"):
-            value = getattr(self, field)
-            if field in required:
-                if field == "control":
-                    if not isinstance(value, Control):
-                        raise ValueError("MAP_REGION requires MANUAL or AUTO_EDGE control")
-                else:
-                    identifier(value)
-            elif value is not None:
-                raise ValueError(f"{self.type} does not accept {field}")
-
-    @property
-    def target_id(self):
-        return self.region_id or self.station_id or self.channel_id
+        if not isinstance(self.control, Control) or self.control not in allowed:
+            raise ValueError(f"{self.type} does not accept control {self.control}")
+        if self.type in (MissionType.MANUAL_DRIVE, MissionType.SAVE_MAP):
+            if self.target_id is not None:
+                raise ValueError(f"{self.type} requires a null target_id")
+        else:
+            identifier(self.target_id)
 
     def to_dict(self):
-        data = {"type": self.type.value, "map_id": self.map_id}
-        for field in ("region_id", "station_id", "channel_id", "control"):
-            value = getattr(self, field)
-            if value is not None:
-                data[field] = value.value if isinstance(value, Control) else value
-        return data
+        return {"type": self.type.value, "map_id": self.map_id,
+                "target_id": self.target_id, "control": self.control.value}
 
     @classmethod
     def from_dict(cls, data):
-        object_fields(data, ("type", "map_id"), ("region_id", "station_id", "channel_id", "control"))
-        return cls(MissionType(data["type"]), data["map_id"], data.get("region_id"),
-                   data.get("station_id"), data.get("channel_id"),
-                   Control(data["control"]) if "control" in data else None)
+        object_fields(data, ("type", "map_id", "target_id", "control"))
+        return cls(MissionType(data["type"]), data["map_id"],
+                   data["target_id"], Control(data["control"]))
 
 
 @dataclass(frozen=True)

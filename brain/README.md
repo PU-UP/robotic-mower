@@ -9,7 +9,7 @@ brain 管理完整业务逻辑：任务顺序、已完成进度、暂停、抢�
   "revision": 4,
   "mode": "WORKING",
   "phase": "EXECUTE",
-  "mission": {"type": "COVER_REGION", "map_id": "garden", "region_id": "region-2"}
+  "mission": {"type": "COVER_REGION", "map_id": "garden", "target_id": "region-2", "control": "AUTO"}
 }
 ```
 

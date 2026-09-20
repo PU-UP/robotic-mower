@@ -20,7 +20,8 @@
   "mission": {
     "type": "COVER_REGION",
     "map_id": "garden",
-    "region_id": "region-2"
+    "target_id": "region-2",
+    "control": "AUTO"
   }
 }
 ```
@@ -40,14 +41,21 @@
 
 当前 mission（建图流程见 [建图业务 01](MAPPING.md)）：
 
-| type | 参数 | 当前 mode |
-| --- | --- | --- |
-| COVER_REGION | map_id, region_id | WORKING |
-| MANUAL_DRIVE | map_id | MAPPING |
-| MAP_REGION | map_id, region_id, control=MANUAL/AUTO_EDGE | MAPPING |
-| MAP_CHANNEL | map_id, channel_id | MAPPING |
-| SAVE_MAP | map_id；仅 COMMIT 阶段 | MAPPING |
-| RETURN_HOME | map_id, station_id | RETURNING |
+所有非 null 的 mission 必须包含四个字段：type、map_id、target_id、control。字段不可省略；无具体操作对象时 target_id 明确为 null。map_id 始终是非空业务地图 ID，target_id 的对象类型由 type 确定，建图时允许指向正在创建的对象。
+
+| type | target_id | control | 当前 mode |
+| --- | --- | --- | --- |
+| COVER_REGION | 区域 ID | AUTO | WORKING |
+| MANUAL_DRIVE | null | MANUAL | MAPPING |
+| MAP_REGION | 区域 ID | MANUAL / AUTO | MAPPING |
+| MAP_CHANNEL | 通道 ID | MANUAL | MAPPING |
+| SAVE_MAP | null | NONE；仅 COMMIT 阶段 | MAPPING |
+| RETURN_HOME | 充电站 ID | AUTO | RETURNING |
+
+control 表示任务的控制方式，只有 EXECUTE 阶段允许运动；PREPARE / COMMIT 阶段 PNC 保持停止。AUTO 的具体行为由 type 决定：MAP_REGION 自动沿边、COVER_REGION 覆盖、RETURN_HOME 回充。接管与恢复只切换当前区域的 MANUAL / AUTO，保留 map_id、target_id 和采集上下文。
+
+三个模块共用 contracts.py 的解析与合法组合校验。旧 mission 中的 region_id / channel_id / station_id 和 AUTO_EDGE 不再接受；上层 command 参数仍保留原有业务名称，由 brain 转为统一 mission。无当前任务时仍为 mission: null。
+
 
 任务 ID、完整目标列表、游标、历史进度只留在 brain。directive 不携带它们。地图版本、定位参考关系与几何在同层数据接口中管理，不混入控制指令版本。
 

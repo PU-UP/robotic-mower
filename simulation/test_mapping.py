@@ -50,7 +50,7 @@ class MappingTests(unittest.TestCase):
         old_revision = self.brain.directive.revision
         result = self.command("TAKE_OVER")
         self.assertEqual(result["directive"]["mission"], {
-            "type": "MAP_REGION", "map_id": "new", "region_id": "r1", "control": "MANUAL"})
+            "type": "MAP_REGION", "map_id": "new", "target_id": "r1", "control": "MANUAL"})
         self.feedback(Module.MAP_MANAGER, State.RUNNING, revision=old_revision, signal="REGION_CLOSED")
         self.assertEqual(self.brain.directive.phase, Phase.PREPARE)
         self.feedback(Module.PERCEPTION)
@@ -60,7 +60,7 @@ class MappingTests(unittest.TestCase):
         self.assertEqual(self.brain.directive.phase, Phase.EXECUTE)
         self.command("START_EDGE_FOLLOW")
         self.ready()
-        self.assertEqual(self.brain.directive.mission.region_id, "r1")
+        self.assertEqual(self.brain.directive.mission.target_id, "r1")
         self.assertEqual(self.brain.mapping.regions, [])
 
     def test_either_detector_can_close_but_only_map_commit_completes_region(self):

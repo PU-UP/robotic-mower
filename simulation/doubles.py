@@ -107,12 +107,12 @@ class AlgorithmDouble:
             if len(self.trace) < 4 or math.dist(self.trace[0], self.trace[-1]) > 0.15:
                 self.state, self.reason = State.FAILED, "TRACE_NOT_CLOSED"
                 return
-            entity = Entity(item.region_id, "region", tuple(self.trace[:-1]))
+            entity = Entity(item.target_id, "region", tuple(self.trace[:-1]))
         else:
             if len(self.trace) < 2:
                 self.state, self.reason = State.FAILED, "CHANNEL_TOO_SHORT"
                 return
-            entity = Entity(item.channel_id, "channel", tuple(self.trace), self.start_region_id)
+            entity = Entity(item.target_id, "channel", tuple(self.trace), self.start_region_id)
         world = self.working_map
         self.working_map = BusinessMap(world.map_id, world.revision + 1, world.slam_map_id,
                                        world.frame_id, world.entities + (entity,))
@@ -145,7 +145,8 @@ class AlgorithmDouble:
             elif d.phase == Phase.COMMIT:
                 self.state = State.STOPPED
             elif observation and observation.localized and 0 <= now - observation.stamp <= 0.5:
-                self.control = item.control.value if item.type == MissionType.MAP_REGION else "MANUAL"
+                self.control = ("AUTO_EDGE" if item.type == MissionType.MAP_REGION
+                                and item.control == Control.AUTO else item.control.value)
                 self.state = State.RUNNING
             else:
                 self.state, self.reason = State.BLOCKED, "LOCALIZATION_UNAVAILABLE"
