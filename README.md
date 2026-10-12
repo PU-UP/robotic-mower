@@ -12,11 +12,25 @@ robotic-mower/
 └── simulation/     算法替身、交互脚本、回归和离线回放
 ```
 
-brain 最上层，下面三个模块平行：
+系统职责见 [SSM、Brain 与 foundation 的边界](SYSTEM_DESIGN.md)。SSM 是 Brain 的上游，负责系统许可与命令转交；Brain 是业务决策中心。根据 2026-10-12 的架构确认，原先 perception、map_manager、pnc 三个算法进程合并到 roboframe 的单一算法进程，三者保留逻辑职责边界。Brain 职责基本维持，继续管理任务顺序、业务进度、中断与恢复。SSM/foundation/HMI/App 尚未接入原型。
+
+## roboframe 工作区与集成边界
+
+当前算法组件关系与职责见 [roboframe 架构讨论基线](docs/ROBOFRAME_ARCHITECTURE_BASELINE.md)：保留原有八项主体，新增 CoverageManager、BladeComponent 和充电桩感知，明确 Controller 对桩模式及配套、可选能力和待定边界。Brain 保留业务决策，CoverageManager 管理某次任务的空间进度；这是目标架构讨论基线，不代表能力已经实现或接口已经定稿。
+
+- 实际工作区：WSL2，发行版 `Ubuntu-22.04`，目录 `/home/watermango/work/roboframe`。
+- GitHub 仓库：[PU-UP/roboframe](https://github.com/PU-UP/roboframe)，已核实 origin 为 `https://github.com/PU-UP/roboframe.git`。
+- roboframe 的产品进程为 `robot_runtime`；算法组件由 integration 装配、接线和编排，组件内部负责算法计算。组件可以独立开发，部署在同一进程内不等于单线程，也不要求一个职责目录对应一个组件。
+- Brain 继续负责业务决策；roboframe 承接当前目标所需的算法执行。具体组件拆分、内部 BT 与 Brain 的接口接入仍待明确，本次进程合并不把 Brain 的业务决策职责转移给算法组件。
+- 本仓库继续用于 Brain 协议、业务状态机与交互仿真。`perception/`、`map_manager/`、`pnc/` 是现有逻辑契约与数据模型，不再表示三个独立部署进程；当前 Python 仿真尚未接入 roboframe。
+
+## 当前原型接口
+
+当前已实现的 Brain 局部接口如下；图中三个算法模块表示仿真中的逻辑交互，不表示产品进程划分。目标部署见系统设计中的 roboframe 单进程边界。
 
 ```mermaid
 flowchart TB
-    U[上层 command / 外部 event] --> B[brain]
+    U[上游接口：目标接SSM，当前由仿真提供] --> B[brain]
     B -->|command_result / brain_status| U
     B -->|directive: mode / phase / mission| P[perception]
     B -->|directive| M[map_manager]
