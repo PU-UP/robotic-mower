@@ -2,8 +2,8 @@
 from dataclasses import dataclass
 
 from contracts import WorkItem
-from map_manager import BusinessMap
-from perception import Observation
+from simulation.world import BusinessMap
+from simulation.observation import Observation
 
 
 @dataclass(frozen=True)
@@ -17,4 +17,8 @@ class PlanningInput:
         return (p.localized and 0 <= now - p.stamp <= max_age
                 and m.map_id == world.map_id
                 and (p.slam_map_id, p.frame_id) == (world.slam_map_id, world.frame_id)
-                and world.find(m.target_id) is not None)
+                and world.find(m.target_id) is not None
+                and world.route((p.x, p.y), m.target_id) is not None)
+
+    def route(self, now):
+        return self.business_map.route((self.observation.x, self.observation.y), self.mission.target_id) if self.ready(now) else None

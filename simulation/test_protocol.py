@@ -16,8 +16,8 @@ class ProtocolTests(unittest.TestCase):
                 "params": {"map_id": "garden", "region_ids": ["region-1", "region-2"]}}
 
     def test_user_directive_roundtrip_has_exact_fields(self):
-        data = {"revision": 4, "mode": "WORKING", "phase": "EXECUTE",
-                "mission": {"type": "COVER_REGION", "map_id": "garden", "target_id": "region-2", "control": "AUTO"}}
+        data = {"task_id": "work-1", "revision": 8, "mode": "WORKING", "phase": "EXECUTE",
+                "mission": {"type": "MOW_REGION", "map_id": "garden", "target_id": "region-2", "control": "AUTO"}}
         self.assertEqual(json.loads(json.dumps(Directive.from_dict(data).to_dict())), data)
         data["mission"]["mission_id"] = "should-not-leak"
         with self.assertRaises(ValueError):
@@ -25,11 +25,13 @@ class ProtocolTests(unittest.TestCase):
 
     def test_all_missions_share_fixed_fields_and_validate_target_control(self):
         cases = [
+            ("UNDOCK", "dock", ("AUTO",)),
+            ("MAP_RETURN_CHANNEL", "return-channel", ("MANUAL",)),
             ("MANUAL_DRIVE", None, ("MANUAL",)),
             ("MAP_REGION", "new-region", ("MANUAL", "AUTO")),
             ("MAP_CHANNEL", "new-channel", ("MANUAL",)),
             ("SAVE_MAP", None, ("NONE",)),
-            ("COVER_REGION", "region-1", ("AUTO",)),
+            ("MOW_REGION", "region-1", ("AUTO",)),
             ("RETURN_HOME", "dock", ("AUTO",)),
         ]
         self.assertEqual({kind for kind, _, _ in cases}, {kind.value for kind in MissionType})
@@ -55,40 +57,33 @@ class ProtocolTests(unittest.TestCase):
                     for invalid_control in (None, "AUTO_EDGE", "unknown"):
                         with self.assertRaises(ValueError):
                             WorkItem.from_dict({**data, "control": invalid_control})
-        stopped = {"revision": 10, "mode": "IDLE", "phase": "NONE", "mission": None}
+        stopped = {"revision": 10, "mode": "IDLE", "phase": "NONE", "mission": None, "task_id": None}
         self.assertEqual(Directive.from_dict(stopped).to_dict(), stopped)
 
-    def test_control_only_moves_during_execute_and_auto_dispatches_by_type(self):
-        from simulation.doubles import AlgorithmDouble, garden
-        world = garden()
-        observation = AlgorithmDouble(Module.PERCEPTION).observe(0)
-        cases = [
-            (MissionType.MANUAL_DRIVE, None, Control.MANUAL, "MANUAL"),
-            (MissionType.MAP_REGION, "new-region", Control.MANUAL, "MANUAL"),
-            (MissionType.MAP_REGION, "new-region", Control.AUTO, "AUTO_EDGE"),
-            (MissionType.MAP_CHANNEL, "new-channel", Control.MANUAL, "MANUAL"),
-            (MissionType.COVER_REGION, "region-1", Control.AUTO, "AUTO_GOAL"),
-            (MissionType.RETURN_HOME, "dock", Control.AUTO, "AUTO_GOAL"),
-            (MissionType.SAVE_MAP, None, Control.NONE, "STOPPED"),
-        ]
-        for kind, target, control, action in cases:
-            mode = {MissionType.COVER_REGION: Mode.WORKING,
-                    MissionType.RETURN_HOME: Mode.RETURNING}.get(kind, Mode.MAPPING)
-            phases = [Phase.COMMIT] if kind == MissionType.SAVE_MAP else [Phase.PREPARE, Phase.EXECUTE]
-            if kind in (MissionType.MAP_REGION, MissionType.MAP_CHANNEL):
-                phases.append(Phase.COMMIT)
-            for phase in phases:
-                with self.subTest(type=kind, control=control, phase=phase):
-                    directive = Directive(1, mode, phase, WorkItem(kind, "garden", target, control))
-                    pnc = AlgorithmDouble(Module.PNC)
-                    pnc.configure(Directive.from_dict(directive.to_dict()), 0)
-                    pnc.step(0, observation, world)
-                    self.assertEqual(pnc.control, action if phase == Phase.EXECUTE else "STOPPED")
+    def test_control_stops_during_prepare_and_inactive_phases(self):
+        from simulation.doubles import RoboframeDouble, garden
+        runtime = RoboframeDouble(garden())
+        item = WorkItem(MissionType.MOW_REGION, "garden", "region-1", Control.AUTO)
+        position = (0, 0)
+        runtime.configure(Directive(1, Mode.WORKING, Phase.PREPARE, item, "work"), 0)
+        runtime.step(0, runtime.observe(0, position))
+        self.assertEqual(runtime.control, "STOPPED")
+        self.assertEqual(runtime.motion_target(.1, position), position)
+        runtime.configure(Directive(2, Mode.WORKING, Phase.EXECUTE, item, "work"), .1)
+        runtime.step(.1, runtime.observe(.1, position))
+        self.assertEqual(runtime.control, "AUTO_GOAL")
+        runtime.configure(Directive(3, Mode.PAUSED, Phase.NONE, None), .2)
+        runtime.step(.2, runtime.observe(.2, position))
+        self.assertEqual(runtime.control, "STOPPED")
+        self.assertFalse(runtime.blade_requested)
 
     def test_status_has_optional_progress_and_machine_readable_reason(self):
-        data = {"module": "pnc", "revision": 4, "sequence": 18, "stamp": 12.3,
+        data = {"module": "roboframe", "revision": 4, "sequence": 18, "stamp": 12.3,
                 "state": "RUNNING", "progress": 0.35, "reason": None}
         self.assertEqual(Status.from_dict(data).to_dict(), data)
+        for old_source in ("perception", "map_manager", "pnc"):
+            with self.subTest(source=old_source), self.assertRaises(ValueError):
+                Status.from_dict({**data, "module": old_source})
         for value in (-1, 1.1, float("nan"), True, "0.3"):
             with self.subTest(progress=value), self.assertRaises(ValueError):
                 Status.from_dict({**data, "progress": value})
@@ -99,7 +94,7 @@ class ProtocolTests(unittest.TestCase):
         self.assertEqual(first["command_result"]["state"], "ACCEPTED")
         self.assertIsNone(first["brain_status"]["last_task_result"])
         self.assertEqual(first["directive"]["mission"], {
-            "type": "COVER_REGION", "map_id": "garden", "target_id": "region-1", "control": "AUTO"})
+            "type": "MOW_REGION", "map_id": "garden", "target_id": "region-1", "control": "AUTO"})
         brain.receive("command", {"command_id": "pause", "type": "PAUSE"}, 0.1)
         duplicate = brain.receive("command", self.command(), 0.2)
         self.assertEqual(duplicate["command_result"], first["command_result"])
@@ -127,7 +122,7 @@ class ProtocolTests(unittest.TestCase):
     def test_mapping_home_commands_and_system_events_have_separate_shapes(self):
         examples = [
             ({"command_id": "map", "type": "START_MAPPING", "params": {"map_id": "new"}},
-             {"type": "MANUAL_DRIVE", "map_id": "new", "target_id": None, "control": "MANUAL"}),
+             {"type": "UNDOCK", "map_id": "new", "target_id": "dock", "control": "AUTO"}),
             ({"command_id": "home", "type": "RETURN_HOME", "params": {"map_id": "garden", "station_id": "dock"}},
              {"type": "RETURN_HOME", "map_id": "garden", "target_id": "dock", "control": "AUTO"}),
         ]
@@ -145,7 +140,7 @@ class ProtocolTests(unittest.TestCase):
     def test_module_rejection_faults_without_completing_task(self):
         brain = Brain()
         brain.receive("command", self.command(), 0)
-        response = brain.receive("status", {"module": "map_manager", "revision": 1, "sequence": 1,
+        response = brain.receive("status", {"module": "roboframe", "revision": 1, "sequence": 1,
             "stamp": 0.1, "state": "REJECTED", "reason": "MAP_NOT_FOUND"}, 0.1)
         self.assertEqual(response["directive"]["mode"], "ERROR")
         self.assertEqual(response["brain_status"]["task"]["completed_targets"], [])
@@ -159,8 +154,8 @@ class ProtocolTests(unittest.TestCase):
                 if path.stem == "cover_regions":
                     emitted = next(e["payload"] for e in first["events"]
                                    if e["action"] == "mode_mission" and e["revision"] == 4)
-                    self.assertEqual(emitted, {"revision": 4, "mode": "WORKING", "phase": "EXECUTE",
-                        "mission": {"type": "COVER_REGION", "map_id": "garden", "target_id": "region-2", "control": "AUTO"}})
+                    self.assertEqual(emitted, {"task_id": "work-1", "revision": 4, "mode": "WORKING", "phase": "EXECUTE",
+                        "mission": {"type": "MOW_REGION", "map_id": "garden", "target_id": "region-2", "control": "AUTO"}})
 
     def test_script_failures_are_real_checks_and_bad_timeline_is_rejected(self):
         spec = {"name": "test", "description": "test", "feedback": "auto", "duration": 1,

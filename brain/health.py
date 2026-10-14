@@ -3,7 +3,7 @@ from copy import deepcopy
 import math
 from types import MappingProxyType
 
-from contracts import Control, EventKind, MissionType, Module, Phase, State
+from contracts import EventKind, Module, Phase, State
 
 
 class HealthEventManager:
@@ -84,31 +84,16 @@ class HealthEventManager:
                                "revision": d.revision,
                                "stamp": status.stamp if status else None})
 
-        requested = set()
-        if d.mission:
-            if d.phase == Phase.COMMIT:
-                requested.add("map_commit")
-            else:
-                requested.add("manual_drive" if d.mission.control == Control.MANUAL else "navigation")
-                if d.mission.type in (MissionType.MAP_REGION, MissionType.MAP_CHANNEL):
-                    requested.add("mapping")
-        dependencies = {
-            "navigation": tuple(Module), "manual_drive": tuple(Module),
-            "mapping": (Module.PERCEPTION, Module.MAP_MANAGER),
-            "map_commit": (Module.MAP_MANAGER,),
-        }
-        capabilities = {}
-        for name, modules in dependencies.items():
-            available = name in requested and all(
-                module in self._statuses
-                and 0 <= now - self._statuses[module].stamp <= self.status_timeout
-                and self._statuses[module].state in (State.READY, State.RUNNING, State.SUCCEEDED)
-                for module in modules)
-            capabilities[name] = {
-                "state": "AVAILABLE" if available else "UNAVAILABLE",
-                "reason": None if available else ("INSUFFICIENT_EVIDENCE" if name in requested else "NOT_REQUESTED"),
-                "causes": [dict(c) for c in causes if c["module"] in modules] if name in requested else [],
-            }
+        # roboframe owns component readiness; Brain only observes the requested action.
+        status = self._statuses.get(Module.ROBOFRAME)
+        requested = d.phase != Phase.NONE
+        available = bool(requested and status and not causes
+                         and status.state in (State.READY, State.RUNNING, State.SUCCEEDED))
+        capabilities = {"current_action": {
+            "state": "AVAILABLE" if available else "UNAVAILABLE",
+            "reason": None if available else ("INSUFFICIENT_EVIDENCE" if requested else "NOT_REQUESTED"),
+            "causes": deepcopy(causes) if requested else [],
+        }}
         return {"revision": d.revision, "low_battery": self.low_battery,
                 "capabilities": capabilities, "causes": causes,
                 "modules": {module.value: {"status": status.to_dict(), "received_at": received,

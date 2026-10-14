@@ -1,0 +1,231 @@
+{
+  "name": "mission_lifecycle",
+  "description": "内部状态验收：业务模式不因暂停改变；失败尝试保留，复位等待显式恢复，新尝试成功后进入下一区域。；基础地图含充电桩—回归通道—区域1—普通通道—区域2。",
+  "feedback": "scripted",
+  "duration": 1.4,
+  "steps": [
+    {
+      "at": 0,
+      "command": {
+        "command_id": "lifecycle-work",
+        "type": "START_MOWING",
+        "params": {
+          "map_id": "garden",
+          "region_ids": [
+            "region-1",
+            "region-2"
+          ]
+        }
+      }
+    },
+    {
+      "at": 0.05,
+      "label": "业务模式与初始生命周期分离",
+      "expect": {
+        "brain_status": {
+          "business_mode": "WORKING",
+          "mission_state": {
+            "lifecycle": "PREPARE",
+            "stage": "MOW_REGION",
+            "attempt": 1
+          }
+        }
+      }
+    },
+    {
+      "at": 0.1,
+      "status": {
+        "module": "roboframe",
+        "revision": 1,
+        "sequence": 1,
+        "stamp": 0.1,
+        "state": "READY"
+      }
+    },
+    {
+      "at": 0.2,
+      "command": {
+        "command_id": "pause",
+        "type": "PAUSE"
+      }
+    },
+    {
+      "at": 0.25,
+      "label": "暂停仍保留 WORKING 与当前目标",
+      "expect": {
+        "directive": {
+          "mode": "PAUSED",
+          "mission": null
+        },
+        "brain_status": {
+          "business_mode": "WORKING",
+          "mission_state": {
+            "lifecycle": "PAUSED",
+            "target_id": "region-1"
+          }
+        }
+      }
+    },
+    {
+      "at": 0.3,
+      "command": {
+        "command_id": "resume",
+        "type": "RESUME"
+      }
+    },
+    {
+      "at": 0.4,
+      "status": {
+        "module": "roboframe",
+        "revision": 4,
+        "sequence": 2,
+        "stamp": 0.4,
+        "state": "READY"
+      }
+    },
+    {
+      "at": 0.5,
+      "status": {
+        "module": "roboframe",
+        "revision": 5,
+        "sequence": 3,
+        "stamp": 0.5,
+        "state": "FAILED",
+        "reason": "LOCALIZATION_LOST"
+      }
+    },
+    {
+      "at": 0.55,
+      "label": "失败锁存且业务模式未丢失",
+      "expect": {
+        "brain_status": {
+          "business_mode": "WORKING",
+          "fault_latched": true,
+          "mission_state": {
+            "lifecycle": "FAILED",
+            "attempt": 1
+          },
+          "last_mission_result": {
+            "result": "failed",
+            "attempt": 1
+          }
+        }
+      }
+    },
+    {
+      "at": 0.6,
+      "command": {
+        "command_id": "reset",
+        "type": "RESET_ERROR"
+      }
+    },
+    {
+      "at": 0.65,
+      "label": "复位只允许重试，不复活失败尝试",
+      "expect": {
+        "directive": {
+          "mode": "PAUSED"
+        },
+        "brain_status": {
+          "fault_latched": false,
+          "mission_state": {
+            "lifecycle": "FAILED",
+            "attempt": 1,
+            "retry_pending": true
+          }
+        }
+      }
+    },
+    {
+      "at": 0.7,
+      "command": {
+        "command_id": "retry",
+        "type": "RESUME"
+      }
+    },
+    {
+      "at": 0.75,
+      "label": "显式恢复创建第 2 次尝试",
+      "expect": {
+        "brain_status": {
+          "mission_state": {
+            "lifecycle": "PREPARE",
+            "attempt": 2,
+            "retry_pending": false
+          },
+          "last_mission_result": {
+            "lifecycle": "FAILED",
+            "attempt": 1
+          }
+        }
+      }
+    },
+    {
+      "at": 0.8,
+      "status": {
+        "module": "roboframe",
+        "revision": 8,
+        "sequence": 4,
+        "stamp": 0.8,
+        "state": "READY"
+      }
+    },
+    {
+      "at": 0.9,
+      "status": {
+        "module": "roboframe",
+        "revision": 9,
+        "sequence": 5,
+        "stamp": 0.9,
+        "state": "SUCCEEDED"
+      }
+    },
+    {
+      "at": 0.95,
+      "label": "区域重试成功后启动下一区域，区域内步骤由roboframe负责",
+      "expect": {
+        "brain_status": {
+          "business_mode": "WORKING",
+          "task": {
+            "completed_targets": [
+              "region-1"
+            ]
+          },
+          "mission_state": {
+            "lifecycle": "PREPARE",
+            "target_id": "region-2",
+            "attempt": 1,
+            "type": "MOW_REGION"
+          },
+          "last_mission_result": {
+            "lifecycle": "SUCCESS",
+            "target_id": "region-1",
+            "attempt": 2,
+            "type": "MOW_REGION"
+          }
+        }
+      }
+    },
+    {
+      "at": 1.0,
+      "command": {
+        "command_id": "cancel",
+        "type": "CANCEL"
+      }
+    },
+    {
+      "at": 1.1,
+      "label": "取消有独立结果，不假报成功",
+      "expect": {
+        "brain_status": {
+          "business_mode": "IDLE",
+          "mission_state": null,
+          "last_mission_result": {
+            "result": "cancelled",
+            "lifecycle": "PREPARE"
+          }
+        }
+      }
+    }
+  ]
+}

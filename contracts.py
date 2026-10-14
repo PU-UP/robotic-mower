@@ -5,9 +5,7 @@ import math
 
 
 class Module(StrEnum):
-    PERCEPTION = "perception"
-    MAP_MANAGER = "map_manager"
-    PNC = "pnc"
+    ROBOFRAME = "roboframe"
 
 
 class Mode(StrEnum):
@@ -34,11 +32,13 @@ class Control(StrEnum):
 
 
 class MissionType(StrEnum):
+    UNDOCK = "UNDOCK"
+    MAP_RETURN_CHANNEL = "MAP_RETURN_CHANNEL"
     MANUAL_DRIVE = "MANUAL_DRIVE"
     MAP_REGION = "MAP_REGION"
     MAP_CHANNEL = "MAP_CHANNEL"
     SAVE_MAP = "SAVE_MAP"
-    COVER_REGION = "COVER_REGION"
+    MOW_REGION = "MOW_REGION"
     RETURN_HOME = "RETURN_HOME"
 
 
@@ -132,11 +132,13 @@ class WorkItem:
         if not isinstance(self.type, MissionType):
             raise ValueError("invalid mission type")
         allowed = {
+            MissionType.UNDOCK: (Control.AUTO,),
+            MissionType.MAP_RETURN_CHANNEL: (Control.MANUAL,),
             MissionType.MANUAL_DRIVE: (Control.MANUAL,),
             MissionType.MAP_REGION: (Control.MANUAL, Control.AUTO),
             MissionType.MAP_CHANNEL: (Control.MANUAL,),
             MissionType.SAVE_MAP: (Control.NONE,),
-            MissionType.COVER_REGION: (Control.AUTO,),
+            MissionType.MOW_REGION: (Control.AUTO,),
             MissionType.RETURN_HOME: (Control.AUTO,),
         }[self.type]
         if not isinstance(self.control, Control) or self.control not in allowed:
@@ -164,6 +166,7 @@ class Directive:
     mode: Mode
     phase: Phase
     mission: WorkItem | None
+    task_id: str | None = None
 
     def __post_init__(self):
         if type(self.revision) is not int or self.revision < 0:
@@ -171,12 +174,13 @@ class Directive:
         if not isinstance(self.mode, Mode) or not isinstance(self.phase, Phase):
             raise ValueError("invalid mode or phase")
         if self.phase == Phase.NONE:
-            if self.mission is not None or self.mode in (Mode.MAPPING, Mode.WORKING, Mode.RETURNING):
-                raise ValueError("NONE requires an inactive mode and null mission")
+            if self.task_id is not None or self.mission is not None or self.mode in (Mode.MAPPING, Mode.WORKING, Mode.RETURNING):
+                raise ValueError("NONE requires an inactive mode and null mission/task_id")
         else:
+            identifier(self.task_id)
             if not isinstance(self.mission, WorkItem):
                 raise ValueError("active phase requires a mission")
-            mode = {MissionType.COVER_REGION: Mode.WORKING,
+            mode = {MissionType.MOW_REGION: Mode.WORKING,
                     MissionType.RETURN_HOME: Mode.RETURNING}.get(self.mission.type, Mode.MAPPING)
             invalid_commit = self.phase == Phase.COMMIT and self.mission.type not in (
                 MissionType.MAP_REGION, MissionType.MAP_CHANNEL, MissionType.SAVE_MAP)
@@ -186,13 +190,13 @@ class Directive:
 
     def to_dict(self):
         return {"revision": self.revision, "mode": self.mode.value, "phase": self.phase.value,
-                "mission": self.mission.to_dict() if self.mission else None}
+                "mission": self.mission.to_dict() if self.mission else None, "task_id": self.task_id}
 
     @classmethod
     def from_dict(cls, data):
-        object_fields(data, ("revision", "mode", "phase", "mission"))
+        object_fields(data, ("revision", "mode", "phase", "mission", "task_id"))
         return cls(data["revision"], Mode(data["mode"]), Phase(data["phase"]),
-                   WorkItem.from_dict(data["mission"]) if data["mission"] is not None else None)
+                   WorkItem.from_dict(data["mission"]) if data["mission"] is not None else None, data["task_id"])
 
 
 @dataclass(frozen=True)

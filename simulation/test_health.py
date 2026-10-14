@@ -11,46 +11,36 @@ class HealthTests(unittest.TestCase):
     def setUp(self):
         self.health = HealthEventManager()
         self.directive = Directive(1, Mode.WORKING, Phase.PREPARE,
-            WorkItem(MissionType.COVER_REGION, "garden", "r1", Control.AUTO))
+            WorkItem(MissionType.MOW_REGION, "garden", "r1", Control.AUTO), "work")
         self.health.begin(self.directive, 0)
 
     def test_feedback_filter_and_new_revision_barrier(self):
-        status = Status(Module.PERCEPTION, 1, 2, 0.2, State.READY)
+        status = Status(Module.ROBOFRAME, 1, 2, 0.2, State.READY)
         self.assertTrue(self.health.accept(status, 0.2))
         for invalid in (status, replace(status, sequence=1), replace(status, revision=0),
                         replace(status, sequence=3, stamp=0.1), replace(status, stamp=2)):
             with self.subTest(invalid=invalid):
                 self.assertFalse(self.health.accept(invalid, 0.3))
-        self.assertFalse(self.health.ready(0.3))
-        for module in (Module.MAP_MANAGER, Module.PNC):
-            self.health.accept(replace(status, module=module), 0.3)
         self.assertTrue(self.health.ready(0.3))
         self.health.begin(replace(self.directive, revision=2), 0.4)
         self.assertFalse(self.health.ready(0.4))
         snapshot = self.health.snapshot(0.4)
-        self.assertFalse(snapshot["modules"]["perception"]["current"])
-        self.assertEqual(snapshot["capabilities"]["navigation"]["state"], "UNAVAILABLE")
+        self.assertFalse(snapshot["modules"]["roboframe"]["current"])
+        self.assertEqual(snapshot["capabilities"]["current_action"]["state"], "UNAVAILABLE")
         with self.assertRaises(TypeError):
-            self.health.statuses[Module.PNC] = status
+            self.health.statuses[Module.ROBOFRAME] = status
 
-    def test_capabilities_keep_map_commit_independent_and_preserve_evidence(self):
+    def test_action_evidence_is_aggregated_by_runtime(self):
         self.health.begin(Directive(2, Mode.MAPPING, Phase.COMMIT,
-            WorkItem(MissionType.SAVE_MAP, "garden", None, Control.NONE)), 0)
-        for module, state, reason in (
-            (Module.PERCEPTION, State.FAILED, "LOCALIZATION_LOST"),
-            (Module.MAP_MANAGER, State.RUNNING, ""),
-            (Module.PNC, State.BLOCKED, "CONTROL_BLOCKED"),
-        ):
-            self.health.accept(Status(module, 2, 1, 0.1, state, reason), 0.1)
+            WorkItem(MissionType.SAVE_MAP, "garden", None, Control.NONE), "mapping"), 0)
+        status = Status(Module.ROBOFRAME, 2, 1, 0.1, State.RUNNING)
+        self.health.accept(status, 0.1)
         snapshot = self.health.snapshot(0.1)
-        self.assertEqual(snapshot["capabilities"]["map_commit"]["state"], "AVAILABLE")
-        self.assertEqual(snapshot["capabilities"]["navigation"]["state"], "UNAVAILABLE")
-        self.assertEqual({c["reason"] for c in snapshot["causes"]},
-                         {"LOCALIZATION_LOST", "CONTROL_BLOCKED"})
-        snapshot["modules"]["perception"]["status"]["reason"] = "changed"
-        self.assertEqual(self.health.snapshot(0.1)["modules"]["perception"]["status"]["reason"],
-                         "LOCALIZATION_LOST")
-        self.assertEqual(self.health.snapshot(1.2)["capabilities"]["map_commit"]["state"], "UNAVAILABLE")
+        self.assertEqual(set(snapshot["capabilities"]), {"current_action"})
+        self.assertEqual(snapshot["capabilities"]["current_action"]["state"], "AVAILABLE")
+        snapshot["modules"]["roboframe"]["status"]["reason"] = "changed"
+        self.assertIsNone(self.health.snapshot(0.1)["modules"]["roboframe"]["status"]["reason"])
+        self.assertEqual(self.health.snapshot(1.2)["capabilities"]["current_action"]["state"], "UNAVAILABLE")
 
     def test_event_replay_cannot_mutate_original_result(self):
         event = Event("battery", EventKind.LOW_BATTERY)
@@ -74,13 +64,13 @@ class HealthIntegrationTests(unittest.TestCase):
 
     def test_late_fresh_heartbeat_cannot_erase_timeout_without_tick(self):
         brain, _ = self.start()
-        # Only perception expires; other peers remain fresh.
+        # Late fresh feedback must not erase the earlier missed deadline.
         for module in Module:
-            stamp = 0 if module == Module.PERCEPTION else 0.5
+            stamp = 0
             brain.receive("status", Status(module, 1, 1, stamp, State.RUNNING).to_dict(), 0.5)
-        result = brain.receive("status", Status(Module.PERCEPTION, 1, 2, 1.01, State.READY).to_dict(), 1.01)
+        result = brain.receive("status", Status(Module.ROBOFRAME, 1, 2, 1.01, State.READY).to_dict(), 1.01)
         self.assertEqual(result["directive"]["mode"], "ERROR")
-        self.assertIn("perception: status timeout", brain.reason)
+        self.assertIn("roboframe: status timeout", brain.reason)
 
     def test_timeout_boundary_and_duplicate_command_still_checks_deadline(self):
         brain, command = self.start()

@@ -11,87 +11,96 @@
 @media(max-width:650px){.header{display:block}.header label{display:block;margin-top:12px}.side,.details-grid{grid-template-columns:1fr}.controls{flex-wrap:wrap}#counter{min-width:auto}.toolbar{gap:10px}#jump{max-width:250px}.message{height:350px;padding:12px;grid-template-columns:1fr;grid-template-rows:104px minmax(0,1fr);gap:10px}.message-json{border-left:0;border-top:1px solid #cfdddc;padding:8px 0 0}#headline{font-size:18px}.legend{flex-wrap:wrap;gap:5px 16px}}
 </style>
 <style>
-[hidden]{display:none!important}.view-switch{display:flex;gap:8px;margin:14px 0}.view-switch button[aria-pressed="true"]{background:var(--ink);color:white;border-color:var(--ink)}.inside{margin-top:12px;background:white;border:1px solid var(--line)}.inside-head{padding:18px 22px;border-bottom:1px solid var(--line);background:#f0f6f5}.inside-head h2{font-size:22px;margin:4px 0}.inside-head p{color:var(--muted)}.inside-grid{display:grid;grid-template-columns:1fr 1.25fr 1fr;gap:0}.inside-col{padding:20px;min-width:0}.inside-col+.inside-col{border-left:1px solid var(--line)}.inside-title{font-size:12px;letter-spacing:1px;color:var(--teal);margin-bottom:14px;font-weight:700}.layer{border:1px solid var(--line);border-left:3px solid var(--teal);padding:14px;margin-bottom:12px}.layer h3{font-size:16px;margin:0 0 8px}.layer p{margin:6px 0;font-size:13px;overflow-wrap:anywhere}.layer.planned{border:1px dashed #a5b4bf;border-left:3px dashed #a5b4bf;background:#f6f8fa}.impl{font-size:11px;color:var(--teal);font-weight:400;display:block;margin-top:3px}.planned .impl{color:var(--muted)}.flow-down{color:var(--muted);text-align:center;font-size:12px;margin:-4px 0 8px}.cap-row{padding:8px 0;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:10px;font-size:13px}.cap-row strong{font-weight:500}.cap-row small{display:block;color:var(--muted);font-size:11px}.inside ul{padding-left:18px;font-size:13px}.inside li{margin:5px 0;overflow-wrap:anywhere}.inside .facts{grid-template-columns:70px 1fr}.inside pre{font-size:12px;margin-bottom:0}.trace-note{padding:12px 22px;border-top:1px solid var(--line);font-size:12px;color:var(--muted)}.tree{white-space:pre-wrap;font:12px/1.8 Consolas,"Microsoft YaHei",monospace;color:#64767c}.decision-result{font-size:17px!important;color:var(--blue)}
+[hidden]{display:none!important}.view-switch{display:flex;gap:8px;margin:14px 0}.view-switch button[aria-pressed="true"]{background:var(--ink);color:white;border-color:var(--ink)}.inside{margin-top:12px;background:white;border:1px solid var(--line)}.inside-head{padding:18px 22px;border-bottom:1px solid var(--line);background:#f0f6f5}.inside-head h2{font-size:22px;margin:4px 0}.inside-head p{color:var(--muted)}.inside-grid{display:grid;grid-template-columns:1fr 1fr;gap:0}.inside-col{padding:20px;min-width:0}.inside-col+.inside-col{border-left:1px solid var(--line)}.inside-title{font-size:12px;letter-spacing:1px;color:var(--teal);margin-bottom:14px;font-weight:700}.layer{border:1px solid var(--line);border-left:3px solid var(--teal);padding:14px;margin-bottom:12px}.layer h3{font-size:16px;margin:0 0 8px}.layer p{margin:6px 0;font-size:13px;overflow-wrap:anywhere}.layer.planned{border:1px dashed #a5b4bf;border-left:3px dashed #a5b4bf;background:#f6f8fa}.impl{font-size:11px;color:var(--teal);font-weight:400;display:block;margin-top:3px}.planned .impl{color:var(--muted)}.flow-down{color:var(--muted);text-align:center;font-size:12px;margin:-4px 0 8px}.cap-row{padding:8px 0;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:10px;font-size:13px}.cap-row strong{font-weight:500}.cap-row small{display:block;color:var(--muted);font-size:11px}.inside ul{padding-left:18px;font-size:13px}.inside li{margin:5px 0;overflow-wrap:anywhere}.inside .facts{grid-template-columns:70px 1fr}.inside pre{font-size:12px;margin-bottom:0}.trace-note{padding:12px 22px;border-top:1px solid var(--line);font-size:12px;color:var(--muted)}.tree{white-space:pre-wrap;font:12px/1.8 Consolas,"Microsoft YaHei",monospace;color:#64767c}.decision-result{font-size:17px!important;color:var(--blue)}
 @media(max-width:1000px){.inside-grid{grid-template-columns:1fr 1fr}.inside-col:last-child{grid-column:1/-1;border-left:0;border-top:1px solid var(--line)}}
 @media(max-width:650px){.inside-grid{grid-template-columns:1fr}.inside-col+.inside-col{border-left:0;border-top:1px solid var(--line)}.inside-head{padding:16px}.inside-col{padding:16px}}
+
+.state-board{padding:20px 24px;border-bottom:1px solid var(--line)}.state-heading{display:flex;justify-content:space-between;gap:20px;align-items:center}.state-heading h3{margin:4px 0;font-size:18px}.state-heading p{font-size:13px;color:var(--muted);max-width:45%}.state-board svg{width:100%;display:block;max-height:330px}.state-board svg text{font-family:system-ui,"Microsoft YaHei",sans-serif}.state-node rect{fill:#f6f8f8;stroke:#b6c5cb;stroke-width:1.3}.state-node.current rect{fill:#e5f3ee;stroke:var(--teal);stroke-width:3}.state-node.previous rect{stroke:var(--amber);stroke-width:3}.state-node text{fill:var(--ink);font-size:14px}.state-edge{stroke:#acbbc0;stroke-width:1.5;fill:none}.state-edge.changed{stroke:var(--teal);stroke-width:3}.edge-caption{font-size:11px;fill:#536d75;paint-order:stroke;stroke:white;stroke-width:4px;stroke-linejoin:round}.lifecycle-strip{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:12px 0;font-size:12px}.life{border:1px solid var(--line);padding:4px 10px;border-radius:3px}.life.active{border-color:var(--teal);background:#e5f3ee;font-weight:650}.graph-legend{font-size:11px;color:var(--muted);margin:4px 0 12px}.stage-exits{border-left:3px solid var(--teal);padding:8px 12px;background:#f0f6f5;font-size:14px}.decision-chain{display:grid;grid-template-columns:1fr 1.2fr 1fr;border-top:1px solid var(--line);margin-top:16px}.decision-chain>div{padding:14px 12px 8px;min-width:0}.decision-chain>div+div{border-left:1px solid var(--line)}.decision-chain span{font-size:11px;font-weight:650;color:var(--teal)}.decision-chain p{font-size:13px;white-space:pre-line;overflow-wrap:anywhere;margin-top:6px}.state-detail{margin-top:14px;padding:8px 12px}.state-detail .inside-col{padding:12px 0}.state-detail .layer{margin-bottom:8px}#mission-boundary{font-size:12px;margin-top:8px}
+@media(max-width:650px){.state-board{padding:14px 10px;overflow-x:auto}.state-board svg{min-width:680px}.state-heading{display:block}.state-heading p{max-width:none}.decision-chain{grid-template-columns:1fr}.decision-chain>div+div{border-left:0;border-top:1px solid var(--line)}}
 </style>
 <main>
   <header class="header"><div><div class="eyebrow">BRAIN / INTERACTION REPLAY</div><h1>业务交互，一步一步看</h1><p class="intro" id="description"></p></div><label>场景 <select id="scenario" aria-label="选择仿真场景"></select></label></header>
-  <div class="view-switch" role="group" aria-label="回放视角"><button id="view-brain" aria-pressed="true" aria-controls="inside">Brain 内部</button><button id="view-modules" aria-pressed="false" aria-controls="outside">模块交互</button></div>
+  <div class="view-switch" role="group" aria-label="回放视角"><button id="view-brain" aria-pressed="true" aria-controls="inside">Brain 内部</button><button id="view-modules" aria-pressed="false" aria-controls="outside">进程交互</button></div>
   <div class="toolbar"><div class="controls"><button id="previous" title="键盘 ←">上一步</button><button id="play">自动播放</button><button id="next" title="键盘 →">下一步</button><output id="counter"></output></div><div class="controls"><label>跳转 <select id="jump" aria-label="跳转到业务动作"></select></label><label>节奏 <select id="speed"><option value="1600">正常</option><option value="3000">慢速</option><option value="700">快速</option></select></label></div></div>
   <div class="scrub"><input id="step" type="range" min="0" value="0" step="1" aria-label="交互步骤"><output class="mono" id="time"></output></div>
   <section class="inside" id="inside" aria-label="Brain 内部设计与真实运行状态">
     <header class="inside-head"><div class="eyebrow">BRAIN / INSIDE</div><h2 id="inside-action"></h2><p id="inside-change" aria-live="polite"></p></header>
+    <section class="state-board" id="state-board" aria-label="分层状态机">
+      <div class="state-heading"><div><div class="eyebrow">MODE / 业务边界</div><h3>第一层 · 当前属于哪项业务</h3></div><p id="mode-note"></p></div>
+      <svg id="mode-graph" viewBox="0 -10 900 240" role="img" aria-label="Mode 状态转换图"></svg>
+      <div class="state-heading"><div><div class="eyebrow">MISSION / 业务过程</div><h3 id="mission-graph-title"></h3></div><p id="mission-note"></p></div>
+      <div id="lifecycle-strip" class="lifecycle-strip" aria-label="Mission 生命周期"></div>
+      <p id="execution-context" class="map-note"></p>
+      <svg id="mission-graph" viewBox="0 0 900 330" role="img" aria-label="当前业务阶段转换图"></svg>
+      <p class="graph-legend">● 当前　✓ 当前业务曾到达（不代表整个阶段已完成）　橙色边框：本步转换前　粗线：本步发生的转换</p>
+      <p id="stage-exits" class="stage-exits"></p>
+      <p id="mission-boundary" class="muted"></p>
+      <div class="decision-chain" aria-label="本步决策证据"><div><span>输入与处理</span><p id="decision-input"></p></div><div><span>实际状态变化</span><p id="decision-change"></p></div><div><span>输出与下一步</span><p id="decision-next"></p></div></div>
+      <details class="state-detail"><summary>状态字段与恢复上下文 · 含动作握手</summary>      <div class="inside-col"><div class="inside-title">业务决策 → 当前任务</div>
+        <article class="layer"><h3>第一层 · Mode<span class="impl">已实现 · 业务模式独立于暂停和故障</span></h3><p class="decision-result" id="inside-mode"></p><p id="inside-context"></p><p id="inside-wire-mode" class="muted"></p><p class="muted">管理完整任务顺序、低电抢占与恢复。暂停保留所属业务，故障由独立锁存控制。</p></article>
+        <div class="flow-down">↓ 管理任务顺序与模式切换</div>
+        <article class="layer"><h3>第二层 · Mission<span class="impl">已实现 · 生命周期 / 业务阶段 / 执行尝试</span></h3><p class="decision-result" id="inside-lifecycle"></p><p id="inside-stage"></p><p id="inside-task"></p><p id="inside-progress"></p><p id="inside-suspended"></p><p id="inside-phase"></p><p id="inside-last-result" class="muted"></p><p class="muted">接管只重新准备 Action；暂停需显式恢复。失败记录保持终态，复位后显式恢复才开始新尝试。</p></article>
+      </div>
+</details>
+    </section>
     <div class="inside-grid" id="inside-grid">
       <div class="inside-col"><div class="inside-title">事实输入 → 状态整理</div>
-        <article class="layer"><h3>Health / Event Manager<span class="impl">已实现 · 缓存、过滤、去重与能力融合</span></h3><p id="inside-battery"></p><div id="inside-capabilities"></div><p class="muted">能力仅评价当前动作；未请求不等于模块故障，可用也不代替就绪确认。</p></article>
+        <article class="layer"><h3>Health / Event Manager<span class="impl">已实现 · 反馈缓存、过滤与去重</span></h3><p id="inside-battery"></p><div id="inside-capabilities"></div><p class="muted">只评价 roboframe 当前任务反馈；内部组件就绪由 roboframe 汇总。</p></article>
         <h2>本版本证据</h2><ul id="inside-causes"></ul>
         <details><summary>查看本次输入</summary><pre id="inside-input"></pre></details>
-      </div>
-      <div class="inside-col"><div class="inside-title">业务决策 → 当前任务</div>
-        <article class="layer"><h3>第一层 · Mode<span class="impl">现有模式分支已运行 · 独立 Mode 状态机待拆分</span></h3><p class="decision-result" id="inside-mode"></p><p id="inside-context"></p><p class="muted">目标设计：IDLE / MAPPING / WORKING / RETURN_TO_CHARGE / CHARGING。当前代码仍以 PAUSED / ERROR 表达暂停与故障。</p></article>
-        <div class="flow-down">↓ 管理任务顺序与模式切换</div>
-        <article class="layer"><h3>第二层 · Mission<span class="impl">任务与建图会话已运行 · 统一生命周期待实现</span></h3><p id="inside-task"></p><p id="inside-progress"></p><p id="inside-suspended"></p><p id="inside-phase"></p><p class="muted">目标生命周期：PREPARE → RUNNING → SUCCESS / FAILED；中断保留 PAUSED。下方显示的是实际 Action 阶段，不伪造 Mission 生命周期。</p></article>
-        <div class="flow-down">↓ 简单阶段直接处理；复杂阶段按需使用树</div>
-        <article class="layer planned"><h3>第三层 · 可选行为树<span class="impl">设计预览 · 尚未执行，不代表运行轨迹</span></h3><div class="tree">建边界阶段的候选选择顺序
-├ 动作不可用 → 请求停止
-├ 区域闭合 → 请求提交
-├ 手动意图 → 遥控采集
-└ 自动意图 → 自动沿边</div><p>读取 Health 与 Mission 的只读快照，输出动作意图。简单覆盖与回充保持小状态机。</p></article>
       </div>
       <div class="inside-col"><div class="inside-title">确认条件 → 统一输出</div>
         <article class="layer"><h3>当前确认条件<span class="impl">已实现 · 使用当前版本的有效反馈</span></h3><p id="inside-gate"></p><ul id="inside-ready"></ul></article>
         <article class="layer"><h3>动作输出<span class="impl">已实现 · 统一生成 directive 与 revision</span></h3><p class="decision-result" id="inside-output"></p><p id="inside-reason"></p><p id="inside-result"></p><pre id="inside-directive"></pre></article>
-        <details><summary>查看真实 Brain 快照</summary><pre id="inside-snapshot"></pre></details>
+        <article class="layer"><h3>当前地图连接</h3><p id="inside-topology"></p><p class="muted">由地图采样展示；Brain 只接收校验结论，不计算几何。</p></article><details><summary>查看真实 Brain 快照</summary><pre id="inside-snapshot"></pre></details>
       </div>
     </div><p class="trace-note" id="inside-trace"></p>
   </section>
-  <section class="stage" id="outside" hidden aria-label="固定位置的模块交互流程图">
+  <section class="stage" id="outside" hidden aria-label="固定位置的进程交互流程图">
     <div class="main-stage"><div class="message"><div class="message-copy" aria-live="polite"><div id="direction"></div><div id="headline"></div><p id="explanation"></p></div><div class="message-json"><div class="payload-heading"><strong id="payload-kind"></strong><span>本步实际消息</span></div><pre id="payload" tabindex="0" aria-label="当前步骤的完整 JSON 消息"></pre></div></div>
     <div class="diagram-scroll"><svg class="diagram" viewBox="0 0 900 520" role="img" aria-labelledby="diagram-title diagram-description">
-      <title id="diagram-title">上层、brain 与三个平行算法模块</title><desc id="diagram-description">高亮箭头表示当前步骤传递的消息；模块位置始终固定。</desc>
+      <title id="diagram-title">上层、Brain 与单一 roboframe</title><desc id="diagram-description">高亮箭头表示当前步骤传递的消息；模块位置始终固定。</desc>
       <defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="#c7d4d4"/></marker><marker id="active-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="#147d78"/></marker><marker id="blue-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="#315c99"/></marker></defs>
       <path class="wire" id="command-wire" d="M415 116V178"/><path class="wire" id="reply-wire" d="M485 178V116"/>
-      <path class="wire down" id="down-perception" d="M330 308V327H112V388"/><path class="wire down" id="down-map_manager" d="M415 308V388"/><path class="wire down" id="down-pnc" d="M555 308V327H702V388"/>
-      <path class="wire" id="up-perception" d="M222 388V351H365V308"/><path class="wire" id="up-map_manager" d="M517 388V351H485V308"/><path class="wire" id="up-pnc" d="M812 388V351H585V308"/>
-      <path class="wire world" id="world-wire" d="M130 111V300H70V388"/>
+      <path class="wire down" id="down-roboframe" d="M415 308V388"/>
+      <path class="wire" id="up-roboframe" d="M517 388V351H485V308"/>
+      <path class="wire world" id="world-wire" d="M130 111V440H290"/>
       <text class="wire-label" x="350" y="140">指令 ↓</text><text class="wire-label" x="503" y="140">↑ 回执</text>
-      <text class="wire-label" x="84" y="374">↓ 任务</text><text class="wire-label" x="212" y="374">↑ 状态</text><text class="wire-label" x="387" y="374">↓ 任务</text><text class="wire-label" x="505" y="374">↑ 状态</text><text class="wire-label" x="674" y="374">↓ 任务</text><text class="wire-label" x="800" y="374">↑ 状态</text>
+      <text class="wire-label" x="380" y="374">↓ 当前任务</text><text class="wire-label" x="505" y="374">↑ 执行反馈</text>
       <text class="active-label" id="upper-label" x="450" y="160" text-anchor="middle"></text><text class="active-label" id="lower-label" x="450" y="340" text-anchor="middle"></text>
       <g class="node" id="node-world"><rect x="30" y="40" width="200" height="71" rx="6"/><text class="node-role" x="48" y="64">模拟环境 · 位姿 / 故障</text><text class="node-value" id="world-value" x="48" y="90">由场景脚本提供</text></g>
       <g class="node" id="node-external"><rect x="325" y="24" width="250" height="92" rx="6"/><text class="node-title" x="345" y="55">用户 / 上层系统</text><text class="node-value" id="external-value" x="345" y="84">等待操作</text><text class="node-small" x="345" y="103">业务指令与外部事件</text></g>
       <g class="node brain" id="node-brain"><rect x="290" y="178" width="320" height="130" rx="6"/><text class="node-title" x="310" y="209">brain</text><text class="node-role" x="400" y="207">业务决策与任务切换</text><text class="node-value" id="brain-mode" x="310" y="237"></text><text class="node-value" id="brain-mission" x="310" y="263"></text><text class="node-small" id="brain-wait" x="310" y="289"></text></g>
-      <g class="node" id="node-perception"><rect x="40" y="388" width="230" height="115" rx="6"/><text class="node-title" x="57" y="419">perception</text><text class="node-role" x="57" y="440">感知 · 定位 · 检测</text><text class="node-value" id="value-perception" x="57" y="467"></text><text class="node-small" id="job-perception" x="57" y="489"></text></g>
-      <g class="node" id="node-map_manager"><rect x="335" y="388" width="230" height="115" rx="6"/><text class="node-title" x="352" y="419">map_manager</text><text class="node-role" x="352" y="440">业务地图 · 采集 · 提交</text><text class="node-value" id="value-map_manager" x="352" y="467"></text><text class="node-small" id="job-map_manager" x="352" y="489"></text></g>
-      <g class="node" id="node-pnc"><rect x="630" y="388" width="230" height="115" rx="6"/><text class="node-title" x="647" y="419">pnc</text><text class="node-role" x="647" y="440">当前任务的规划与控制</text><text class="node-value" id="value-pnc" x="647" y="467"></text><text class="node-small" id="job-pnc" x="647" y="489"></text></g>
+      <g class="node" id="node-roboframe"><rect x="290" y="388" width="380" height="115" rx="6"/><text class="node-title" x="310" y="419">roboframe</text><text class="node-role" x="310" y="440">单一算法进程 · 当前任务执行</text><text class="node-value" id="value-roboframe" x="310" y="467"></text><text class="node-small" id="job-roboframe" x="310" y="489"></text></g>
     </svg></div><div class="legend"><span>蓝色 ↓ 当前下发</span><span>绿色 ↑ 当前反馈 / 输入</span><span>灰色：本步无消息</span></div></div>
-    <aside class="side"><div><div class="section-title"><h2>当前业务</h2><span class="badge" id="revision"></span></div><dl class="facts"><dt>模式</dt><dd id="mode"></dd><dt>阶段</dt><dd id="phase"></dd><dt>任务</dt><dd id="mission"></dd><dt>地图</dt><dd id="map-id"></dd></dl></div><div><h2>地图与模拟位置</h2><svg id="map" viewBox="0 0 300 185" role="img" aria-label="已提交区域、通道、采集草稿及模拟位置"></svg><p class="map-key">绿色 区域　橙色 通道　蓝虚线 草稿</p><p class="map-note" id="map-time"></p></div><div class="receipt"><h2>最近的上层回执</h2><p id="receipt"></p><p class="map-note">“已接受”表示指令受理，业务完成要看后续反馈。</p></div></aside>
+    <aside class="side"><div><div class="section-title"><h2>当前业务</h2><span class="badge" id="revision"></span></div><dl class="facts"><dt>模式</dt><dd id="mode"></dd><dt>阶段</dt><dd id="phase"></dd><dt>任务</dt><dd id="mission"></dd><dt>地图</dt><dd id="map-id"></dd></dl></div><div><h2>地图与模拟位置</h2><svg id="map" viewBox="0 0 300 185" role="img" aria-label="已提交区域、通道、采集草稿及模拟位置"></svg><p class="map-key">绿色 区域　紫色 回归通道　橙色 普通通道（虚线待连接）　蓝色 路径 / 草稿</p><p class="map-note" id="map-time"></p><p class="map-note" id="map-topology"></p></div><div class="receipt"><h2>最近的上层回执</h2><p id="receipt"></p><p class="map-note">“已接受”表示指令受理，业务完成要看后续反馈。</p></div></aside>
   </section>
   <p class="footnote" id="step-note"></p>
   <div class="details-grid"><details><summary id="check-summary">场景验收</summary><ul id="checks"></ul></details><details id="technical"><summary>技术详情 · 当前消息与原始记录</summary><div class="detail-body"><h2>当前消息</h2><pre id="raw"></pre><h2>当前下发的 directive</h2><pre id="directive"></pre><details><summary>完整原始消息记录（含心跳）</summary><div class="log"><table><thead><tr><th>时间</th><th>方向</th><th>消息</th></tr></thead><tbody id="events"></tbody></table></div></details></div></details></div>
-  <p class="footnote">模块卡片保留最近观测到的基本状态；新指令的确认情况由 brain 单独统计。闭环等检测结果通过本步 status 展示。此页面验证业务交互；位置与算法反馈来自仿真替身。地图使用不晚于当前步骤的采样，算法模块间的高频数据流未逐条记录。</p>
+  <p class="footnote">模块卡片保留最近观测到的基本状态；新指令的确认情况由 brain 单独统计。闭环等检测结果通过本步 status 展示。此页面验证业务交互；位置与算法反馈来自仿真替身。地图使用不晚于当前步骤的采样，roboframe 内部的高频数据流未逐条记录。</p>
 </main>
 <script id="data" type="application/json">__REPORT_DATA__</script>
 <script>
 "use strict";
 const runs=JSON.parse(document.getElementById("data").textContent),$=id=>document.getElementById(id);
-const modules=["perception","map_manager","pnc"], names={external:"用户 / 上层",brain:"brain",modules:"三个算法模块",world:"模拟环境",scenario:"模拟环境",perception:"perception",map_manager:"map_manager",pnc:"pnc"};
+const modules=["roboframe"], names={external:"用户 / 上层",brain:"Brain",roboframe:"roboframe",world:"模拟环境",scenario:"模拟环境"};
 const modes={IDLE:"待机",MAPPING:"建图",WORKING:"作业",RETURNING:"回充",PAUSED:"已暂停",CHARGING:"充电",ERROR:"故障停止"},phases={NONE:"无执行任务",PREPARE:"准备，等待模块就绪",EXECUTE:"执行",COMMIT:"提交，等待保存确认"};
 const states={READY:"已就绪",RUNNING:"执行中",SUCCEEDED:"已完成",BLOCKED:"受阻",FAILED:"失败",REJECTED:"校验拒绝",STOPPED:"已停止"};
 const commands={START_MAPPING:"开始建图",SELECT_REGION_START:"选择区域起点",START_EDGE_FOLLOW:"开始 / 继续自动沿边",TAKE_OVER:"临时遥控接管",START_CHANNEL:"开始建通道",FINISH_CHANNEL:"结束通道采集",FINISH_MAPPING:"结束整次建图",START_MOWING:"开始割草",RETURN_HOME:"返回充电站",PAUSE:"暂停任务",RESUME:"恢复任务",CANCEL:"取消任务",RESET_ERROR:"解除故障",LOW_BATTERY:"电量不足",BATTERY_OK:"电量已恢复"};
-const reasons={CHANNEL_START_OUTSIDE_REGION:"通道起点不在已建区域内",LOCALIZATION_LOST:"定位丢失",LOCALIZATION_UNAVAILABLE:"定位不可用",MAP_OR_TARGET_UNAVAILABLE:"地图或目标不可用",MAP_ALREADY_EXISTS:"地图已存在",TRACE_NOT_CLOSED:"边界尚未闭合",CHANNEL_TOO_SHORT:"通道长度不足",PLANNING_INPUT_INVALID:"规划输入不可用","localization lost":"定位丢失"};
-const scenarioNames={mapping_session:"建图 · 两个区域与一条通道",mowing:"割草",pause_resume:"暂停与续作",return_home:"回充",low_battery:"低电抢占",fault_recovery:"故障恢复",status_timeout:"状态超时",stale_input:"定位数据过期",cancel:"取消任务",cover_regions:"多区域作业",pause_and_timeout:"暂停与超时",auto_fault_recovery:"自动反馈与故障恢复"};
+const reasons={MAPPING_MUST_START_AT_DOCK:"首次建图必须从充电站出发",UNDOCK_INCOMPLETE:"尚未后退至1.5米出口",RETURN_CHANNEL_REQUIRED:"缺少回归通道或首个区域",RETURN_CHANNEL_NOT_CONNECTED:"回归通道未连接充电站与第一个区域",CHANNEL_NOT_CONNECTED:"普通通道必须连接两个不同区域",REGION_NOT_REACHABLE:"存在无法从充电站到达的区域",CHANNEL_START_OUTSIDE_REGION:"通道起点不在已建区域内",LOCALIZATION_LOST:"定位丢失",LOCALIZATION_UNAVAILABLE:"定位不可用",MAP_OR_TARGET_UNAVAILABLE:"地图或目标不可用",MAP_ALREADY_EXISTS:"地图已存在",TRACE_NOT_CLOSED:"边界尚未闭合",CHANNEL_TOO_SHORT:"通道长度不足",PLANNING_INPUT_INVALID:"规划输入不可用","localization lost":"定位丢失"};
+const scenarioNames={mapping_session:"建图 · 回归通道与区域连通",mapping_disconnected:"建图 · 通道断开时拒绝保存",mowing:"割草",pause_resume:"暂停与续作",return_home:"回充",low_battery:"低电抢占",fault_recovery:"故障恢复",status_timeout:"状态超时",stale_input:"定位数据过期",cancel:"取消任务",cover_regions:"切割 · 沿边与覆盖",pause_and_timeout:"暂停与超时",auto_fault_recovery:"自动反馈与故障恢复"};
+scenarioNames.mission_lifecycle="Mission 生命周期 · 暂停与故障重试";
 let run,steps=[],timer=null;
 const copy=x=>JSON.parse(JSON.stringify(x));
-const targetName=id=>id?String(id).replace(/^region-/,"区域 ").replace(/^channel-/,"通道 ").replace(/^dock$/,"充电站"):"";
+const targetName=id=>id?String(id).replace(/^region-/,"区域 ").replace(/^channel-/,"通道 ").replace(/^dock$/,"充电站").replace(/^return-channel$/,"回归通道"):"";
 const why=s=>reasons[s]??(s?.includes("status timeout")?`${s.split(":")[0]} 反馈超时`:s??"");
-function missionName(m){if(!m)return "无当前任务";const target=targetName(m.target_id);return ({MANUAL_DRIVE:"遥控转场",MAP_REGION:`${target} · ${m.control==="AUTO"?"自动沿边":"遥控采集"}`,MAP_CHANNEL:`${target} · 遥控采集`,SAVE_MAP:"保存整张地图",COVER_REGION:`${target} · 覆盖作业`,RETURN_HOME:`前往${target||"充电站"}`})[m.type]??m.type}
+function missionName(m){if(!m)return "无当前任务";const target=targetName(m.target_id);return ({UNDOCK:"自动后退 1.5 米",MAP_RETURN_CHANNEL:"遥控到首区起点 · 记录回归通道",MANUAL_DRIVE:"遥控转场",MAP_REGION:`${target} · ${m.control==="AUTO"?"自动沿边":"遥控采集"}`,MAP_CHANNEL:`${target} · 遥控采集`,SAVE_MAP:"保存整张地图",MOW_REGION:`${target} · 区域割草`,RETURN_HOME:`前往${target||"充电站"}`})[m.type]??m.type}
 function commandName(p){return [commands[p.type]??p.type,targetName(p.params?.region_id??p.params?.channel_id)].filter(Boolean).join(" · ")}
 function statusIgnored(p,d,statuses,issuedAt,now,timeout){const last=statuses[p.module];return p.revision!==d.revision||p.stamp<issuedAt||now-p.stamp<0||now-p.stamp>timeout||Boolean(last&&(p.sequence<=last.sequence||p.stamp<last.stamp))}
 // Walk the event log in delivery order. Equal timestamps must never reveal a later decision.
 function buildSteps(r){
   let d={revision:0,mode:"IDLE",phase:"NONE",mission:null},statuses={},moduleStates={},operator="等待操作",receipt="尚无回执",position=null,issuedAt=0;
-  const result=[],seen=new Map(),commandById=new Map();let brain=null,brainEvent=null;
+  const result=[],seen=new Map(),commandById=new Map();let brain=null,brainEvent=null,decision=null,decisionIndex=null;
   const initial=r.frames[0];
   for(const name of modules){
     const observed=initial?.modules?.[name];
@@ -99,7 +108,7 @@ function buildSteps(r){
       moduleStates[name]={state:observed.state,revision:0,sequence:0,stamp:initial.time};
   }
   r.events.forEach((e,eventIndex)=>{
-    if(e.brain_after){brain=e.brain_after;brainEvent=eventIndex}
+    if(e.brain_after){brain=e.brain_after;brainEvent=eventIndex}if(e.brain_before){decision=e;decisionIndex=eventIndex}
     const p=e.payload??e;let ignored=false,keep=true;
     if(e.action==="mode_mission"){d=copy(p);statuses={};issuedAt=e.time}
     if(e.action==="command"||e.action==="event"){operator=commandName(p);if(p.command_id)commandById.set(p.command_id,operator)}
@@ -116,59 +125,195 @@ function buildSteps(r){
       if(p.stamp<=e.time&&(!previous||(p.revision>=previous.revision&&p.sequence>previous.sequence&&p.stamp>=previous.stamp)))
         moduleStates[p.module]=copy(p);
     }
-    if(keep)result.push({event:e,eventIndex,d:copy(d),statuses:copy(statuses),moduleStates:copy(moduleStates),operator,receipt,position:copy(position),ignored,brain,brainEvent});
+    if(keep)result.push({event:e,eventIndex,d:copy(d),statuses:copy(statuses),moduleStates:copy(moduleStates),operator,receipt,position:copy(position),ignored,brain,brainEvent,decision,decisionIndex});
   });
   return result;
 }
 function describe(s){
   const e=s.event,p=e.payload??e,d=s.d,m=d.mission,mission=missionName(m);let title="",detail="",short="";
-  if(e.action==="command"||e.action==="event"){title=commandName(p);short=commands[p.type]??p.type;detail=({START_MAPPING:"请求建立新的业务地图；由 brain 安排遥控转场。",SELECT_REGION_START:"以当前位置作为区域起点，等待用户触发自动沿边。",START_EDGE_FOLLOW:"请求自动沿边；沿用当前区域起点与已采集草稿。",TAKE_OVER:"切换为遥控，继续记录同一区域边界；之后可继续自动沿边。",START_CHANNEL:"请求采集通道；map_manager 将校验起点是否在已建区域内。",FINISH_CHANNEL:"结束遥控采集；由 brain 要求地图模块提交通道。",FINISH_MAPPING:"请求保存整次建图成果；等待地图模块确认后才结束。"})[p.type]??"上层输入交给 brain 判断；后续步骤显示决策与模块反馈。"}
+  if(e.action==="command"||e.action==="event"){title=commandName(p);short=commands[p.type]??p.type;detail=({START_MAPPING:"必须从充电站开始；先自动后退1.5米，再提示用户遥控到第一个区域的起点，记录回归通道。",SELECT_REGION_START:"以当前位置生成区域起点；首次确认同时结束回归通道，两者共享同一位置。之后等待用户触发自动沿边。",START_EDGE_FOLLOW:"请求自动沿边；沿用当前区域起点与已采集草稿。",TAKE_OVER:"切换为遥控，继续记录同一区域边界；之后可继续自动沿边。",START_CHANNEL:"请求采集通道；roboframe 将校验起点是否在已建区域内。",FINISH_CHANNEL:"暂存通道轨迹；另一端必须被第二个区域包含，才允许最终保存地图。",FINISH_MAPPING:"校验回归通道、普通通道两端及全图可达性；全部通过后才保存，否则保留会话供修正。"})[p.type]??"上层输入交给 brain 判断；后续步骤显示决策与模块反馈。"}
   else if(e.action==="mode_mission"){
     title=`${d.phase==="PREPARE"?"准备：":d.phase==="COMMIT"?"提交：":"下发："}${mission}`;short=({PREPARE:"准备任务",EXECUTE:"执行任务",COMMIT:"提交结果",NONE:"切换模式"})[d.phase]??"下发任务";
-    detail=d.phase==="PREPARE"?"向三个模块广播同一任务；等待三方就绪后，brain 再下发执行。":d.phase==="COMMIT"?"等待 map_manager 保存确认；下发提交指令不等于保存完成。":d.phase==="EXECUTE"?"三个模块按当前任务各自执行；brain 等待状态，不处理轨迹数据。":`切换到${modes[d.mode]??d.mode}，三个模块按新模式响应。`;
+    detail=d.phase==="PREPARE"?"向 roboframe 下发当前任务；等待本版本就绪后，再下发执行。":d.phase==="COMMIT"?"等待 roboframe 保存确认；下发提交指令不等于保存完成。":d.phase==="EXECUTE"?"roboframe 内部协调执行；Brain 等待任务反馈，不处理轨迹。":`切换到${modes[d.mode]??d.mode}，roboframe 按新模式响应。`;
     if(!m)title=`切换到${modes[d.mode]??d.mode}`;
     if(e.reason)detail=why(e.reason);
   }else if(e.action==="command_result"){title=p.state==="ACCEPTED"?"指令已受理":"指令被拒绝";short=title;detail=s.receipt+(p.state==="ACCEPTED"?"。这条回执不表示业务已经完成。":"。当前业务按已有状态保持。")}
   else if(e.action==="status"){
     short=p.signal==="REGION_CLOSED"?"检测到回到起点":states[p.state]??p.state;
     title=`${names[e.source]??e.source}：${short}`;
-    detail=p.signal==="REGION_CLOSED"?"当前区域边界已闭合，通知 brain；下一步由 brain 决定提交区域。":p.state==="READY"?"当前任务的准备条件已满足；brain 汇总模块反馈。":p.state==="SUCCEEDED"?`${mission}的模块任务已完成，交给 brain 决定下一步。`:p.state==="RUNNING"?`${mission}正在执行，模块向 brain 返回当前状态。`:p.state==="STOPPED"?"模块已停止当前执行，向 brain 回报。":"模块返回异常或校验结果，交给 brain 决策。";
+    detail=p.signal==="REGION_CLOSED"?"当前区域边界已闭合，通知 brain；下一步由 brain 决定提交区域。":p.state==="READY"?"roboframe 已汇总当前任务的执行条件；Brain 接收统一结果。":p.state==="SUCCEEDED"?`${mission}的任务已完成，交给 brain 决定下一步。`:p.state==="RUNNING"?`${mission}正在执行，模块向 brain 返回当前状态。`:p.state==="STOPPED"?"模块已停止当前执行，向 brain 回报。":"模块返回异常或校验结果，交给 brain 决策。";
     if(p.reason)detail=why(p.reason)+(p.state==="REJECTED"?"；brain 将处理本次操作的拒绝结果。":"；通知 brain 处理。");
     if(s.ignored){title+="（忽略）";short="无效反馈，忽略";detail=`这条反馈的版本、时效或序号不符合当前要求；当前为第 ${d.revision} 版，反馈为第 ${p.revision} 版。`}
-  }else if(e.action==="position"){title=`模拟位置移动到 (${p.position.join(", ")})`;short="位姿输入";detail="场景脚本向感知侧提供模拟位置。坐标属于算法数据，不作为业务指令发给 brain。"}
+  }else if(e.action==="tick"){title="时钟检查：反馈超时";short="反馈超时";detail=why(e.brain_after?.reason)}else if(e.action==="position"){title=`模拟位置移动到 (${p.position.join(", ")})`;short="位姿输入";detail="场景脚本向感知侧提供模拟位置。坐标属于算法数据，不作为业务指令发给 brain。"}
   else if(e.action==="fault"){title=`模拟${p.module??"模块"}${p.silent?"失联":p.reason?"故障":"恢复"}`;short="环境变化";detail=p.silent?"暂停该模块反馈，观察 brain 的超时处理。":why(p.reason)||"恢复算法替身，后续状态反馈由模块发送。"}
   else {title=e.action;detail="场景记录";short=e.action}
   return {title,detail,short};
 }
-function job(name,d){const m=d.mission;if(!m)return "按当前模式等待";if(d.phase==="PREPARE")return {perception:"任务：准备定位与感知",map_manager:m.type==="MAP_CHANNEL"?"任务：校验通道起点":"任务：准备地图与目标",pnc:"任务：停止，检查规划输入"}[name];if(d.phase==="COMMIT")return {perception:"任务：保持定位",map_manager:"任务：保存当前采集结果",pnc:"任务：停止运动"}[name];return {perception:m.type==="MAP_REGION"?"任务：定位，检测区域闭环":"任务：提供定位与感知",map_manager:({MAP_REGION:"任务：记录区域边界",MAP_CHANNEL:"任务：记录通道轨迹",MANUAL_DRIVE:"任务：维护业务地图"})[m.type]??"任务：提供地图与目标",pnc:m.type==="MAP_REGION"?(m.control==="AUTO"?"任务：自动沿边控制":"任务：遥控运动"):m.type==="MANUAL_DRIVE"||m.type==="MAP_CHANNEL"?"任务：遥控运动":"任务：当前目标规划与控制"}[name]}
+function job(name,d){if(!d.mission)return "按当前模式等待";return d.phase==="PREPARE"?"指令：准备当前任务":d.phase==="COMMIT"?"指令：提交地图结果":"指令："+missionName(d.mission)}
 function drawMap(s){
   const e=s.event,frames=run.frames.filter(f=>f.time<=e.time),f=frames.at(-1)??{},svg=$("map");svg.replaceChildren();
   const points=run.frames.flatMap(x=>[x.position??[0,0],...(x.trace??[]),...(x.map?.entities??[]).flatMap(a=>a.points)]);if(!points.length)points.push([0,0]);
   const minX=Math.min(...points.map(p=>p[0])),minY=Math.min(...points.map(p=>p[1])),maxX=Math.max(...points.map(p=>p[0])),maxY=Math.max(...points.map(p=>p[1]));
-  const scale=Math.min(244/Math.max(1,maxX-minX),126/Math.max(1,maxY-minY)),xy=p=>[28+(p[0]-minX)*scale,155-(p[1]-minY)*scale];
+  const scale=Math.min(244/Math.max(1,maxX-minX),126/Math.max(1,maxY-minY)),xy=p=>[28+(p[0]-minX)*scale,(185+(maxY-minY)*scale)/2-(p[1]-minY)*scale];
   const add=(tag,attrs)=>{const n=document.createElementNS("http://www.w3.org/2000/svg",tag);for(const [k,v]of Object.entries(attrs))n.setAttribute(k,v);svg.append(n);return n};
-  for(const a of f.map?.entities??[]){if(!a.points.length)continue;add(a.kind==="region"?"polygon":"polyline",{points:a.points.map(p=>xy(p).join(",")).join(" "),fill:a.kind==="region"?"#dfecd9":"none",stroke:a.kind==="channel"?"#a9631b":"#7b9975","stroke-width":2});const [x,y]=xy(a.points[0]);add("text",{x:x+2,y:y-5,"font-size":11,fill:"#486342"}).textContent=targetName(a.entity_id)}
+  const entities=f.map?.entities??[];
+  for(const a of entities){
+    if(!a.points.length)continue;
+    const [x,y]=xy(a.points[0]);
+    if(a.kind==="charging_station"){
+      add("rect",{x:x-4,y:y-4,width:8,height:8,fill:"#203a43"});
+      if(a.exit_point){const [ex,ey]=xy(a.exit_point);add("line",{x1:x,y1:y,x2:ex,y2:ey,stroke:"#64767c","stroke-dasharray":"3 2"});add("text",{x:(x+ex)/2,y:y+15,"font-size":9,fill:"#64767c"}).textContent="后退1.5m"}
+    }else add(a.kind==="region"?"polygon":"polyline",{points:a.points.map(p=>xy(p).join(",")).join(" "),fill:a.kind==="region"?"#dfecd9":"none",stroke:a.kind==="channel"?"#a9631b":a.kind==="return_channel"?"#8857a8":"#7b9975","stroke-width":2,"stroke-dasharray":a.kind==="channel"&&!a.end_region_id?"4 3":"none"});
+    const labelY=a.kind==="charging_station"?y+29:a.kind==="region"?Math.min(...a.points.map(p=>xy(p)[1]))-7:a.kind==="return_channel"?y-14:y-5;
+    add("text",{x:x+2,y:labelY,"font-size":10,fill:"#486342"}).textContent=targetName(a.entity_id);
+  }
+  const route=f.modules?.roboframe?.route;
+  if(route?.length)add("polyline",{points:route.map(p=>xy(p).join(",")).join(" "),fill:"none",stroke:"#315c99","stroke-width":1,"stroke-dasharray":"2 3"});
+  const topology=entities.filter(a=>["channel","return_channel"].includes(a.kind)).map(a=>`${targetName(a.entity_id)}：${targetName(a.station_id??a.start_region_id)||"待连接"} ↔ ${targetName(a.end_region_id)||"待连接"}`).join("；")||"尚未生成通道；首次建图先退桩，再遥控记录回归通道。";
+  $("map-topology").textContent=topology;$("inside-topology").textContent=topology;
   if(f.trace?.length){add("polyline",{points:f.trace.map(p=>xy(p).join(",")).join(" "),fill:"none",stroke:"#315c99","stroke-width":2,"stroke-dasharray":"4 3"});const [cx,cy]=xy(f.trace[0]);add("circle",{cx,cy,r:4,fill:"white",stroke:"#315c99"})}
   const pos=s.position??f.position;if(pos){const[cx,cy]=xy(pos);add("circle",{cx,cy,r:4,fill:"#203a43"})}
   $("map-time").textContent=`地图采样 ${Number(f.time??0).toFixed(2)} s · 黑点为模拟位置`;
 }
+
+const businessNames={IDLE:"待机",MAPPING:"建图",WORKING:"作业",RETURN_TO_CHARGE:"回充",CHARGING:"充电"};
+const stageLabels={UNDOCK:"退桩 1.5m",RECORD_RETURN_CHANNEL:"记录回归通道",BUILD_BOUNDARY:"建区域边界",WAIT_START:"遥控转场 / 等待操作",BUILD_CHANNEL:"建普通通道",COMMIT_OBJECT:"暂存当前对象",SAVE_MAP:"校验并保存地图",MOW_REGION:"区域割草",RETURN_AND_CHARGE:"返回并确认充电",SUCCESS:"任务完成"};
+const modeNodes=[["IDLE",90,80],["MAPPING",300,20],["WORKING",300,135],["RETURN_TO_CHARGE",540,135],["CHARGING",765,135]];
+// Explicit business routes, not a generic diagram engine. Labels are design rules;
+// highlights and the decision chain below come only from recorded snapshots.
+const modeEdges=[
+ ["IDLE","MAPPING","M165 86L225 58","开始建图",193,65],
+ ["MAPPING","IDLE","M225 30H90V57","保存 / 取消",140,24],
+ ["IDLE","WORKING","M165 102L225 141","开始作业",190,137],
+ ["WORKING","IDLE","M225 163H30V105","完成 / 取消",100,178],
+ ["IDLE","RETURN_TO_CHARGE","M165 80H540V112","主动回充",456,73],
+ ["WORKING","RETURN_TO_CHARGE","M375 135H465","低电抢占",420,126],
+ ["RETURN_TO_CHARGE","CHARGING","M615 135H690","设备确认充电",653,126],
+ ["CHARGING","WORKING","M765 158V204H300V158","电量恢复 + 有挂起任务：等待显式恢复",523,198],
+ ["CHARGING","IDLE","M840 135H866V7H20V80H15","电量恢复无挂起任务 / 取消 → 待机",638,18],
+ ["RETURN_TO_CHARGE","IDLE","M540 158V185H60V104","取消 → 待机",409,179]
+];
+const mappingNodes=[["UNDOCK",95,40],["RECORD_RETURN_CHANNEL",365,40],["BUILD_BOUNDARY",665,40],["WAIT_START",365,170],["BUILD_CHANNEL",95,170],["COMMIT_OBJECT",665,170],["SAVE_MAP",365,285],["SUCCESS",665,285]];
+const mappingEdges=[
+ ["UNDOCK","RECORD_RETURN_CHANNEL","M170 40H290","roboframe 确认退桩",230,31],
+ ["RECORD_RETURN_CHANNEL","BUILD_BOUNDARY","M440 40H590","确认首区起点",515,31],
+ ["BUILD_BOUNDARY","BUILD_BOUNDARY","M740 40H825V8H665V17","自动 ↔ 遥控，重新准备",760,83],
+ ["BUILD_BOUNDARY","COMMIT_OBJECT","M665 63V147","有效闭合",708,110],
+ ["COMMIT_OBJECT","WAIT_START","M590 170H440","地图提交成功",515,161],
+ ["WAIT_START","BUILD_BOUNDARY","M440 151L615 63","选择新区域起点",486,106],
+ ["WAIT_START","BUILD_CHANNEL","M290 170H170","开始通道",230,161],
+ ["BUILD_CHANNEL","WAIT_START","M95 193V222H365V193","起点拒绝，保留会话",224,216],
+ ["BUILD_CHANNEL","COMMIT_OBJECT","M95 147V119H590V147","用户结束通道采集",285,113],
+ ["WAIT_START","SAVE_MAP","M365 193V262","结束整次建图",420,250],
+ ["SAVE_MAP","WAIT_START","M290 285H230V237H340V193","连通校验拒绝",150,274],
+ ["SAVE_MAP","SUCCESS","M440 285H590","地图保存成功",515,276]
+];
+function missionKey(m){return m?[m.task_id,m.type,m.type==="MAPPING"?null:m.target_id,m.attempt].join("|"):null}
+function executionLabel(m){return m?`${({MAPPING:"建图会话",MOW_REGION:"区域割草",RETURN_HOME:"回充"})[m.type]??m.type} · ${targetName(m.target_id)||m.task_id} · 尝试${m.attempt}`:"无"}
+function changes(before,after){
+  const a=before.public_status,b=after.public_status,x=a.mission_state,y=b.mission_state,out=[];
+  const add=(label,v,w)=>{if(v!==w)out.push(`${label}：${v??"无"} → ${w??"无"}`)};
+  add("业务",a.business_mode,b.business_mode);
+  if(missionKey(x)!==missionKey(y))out.push(`执行单元：${executionLabel(x)} → ${executionLabel(y)}`);
+  add(missionKey(x)===missionKey(y)?"生命周期":"前后执行单元的状态",x?.lifecycle,y?.lifecycle);add("业务阶段",x?.stage,y?.stage);
+  add("控制源",x?.action.control,y?.action.control);add("动作握手",x?.action_phase,y?.action_phase);
+  add("故障锁存",a.fault_latched?"有":"无",b.fault_latched?"有":"无");
+  add("等待重试",x?.retry_pending?"是":"否",y?.retry_pending?"是":"否");
+  if(missionKey(a.suspended_mission)!==missionKey(b.suspended_mission))out.push(`挂起任务：${executionLabel(a.suspended_mission)} → ${executionLabel(b.suspended_mission)}${b.suspended_mission?"（"+b.suspended_mission.lifecycle+"）":""}`);
+  if(JSON.stringify(a.last_mission_result)!==JSON.stringify(b.last_mission_result)&&b.last_mission_result)out.push(`执行结果：${b.last_mission_result.result} · ${targetName(b.last_mission_result.target_id)||b.last_mission_result.type}`);
+  if(JSON.stringify(a.mapping?.last_result)!==JSON.stringify(b.mapping?.last_result)&&b.mapping?.last_result)out.push(`对象操作：${b.mapping.last_result.result}${b.mapping.last_result.reason?" · "+why(b.mapping.last_result.reason):""}`);
+  return out;
+}
+function nextCondition(b){
+ const st=b.public_status,m=st.mission_state,d=b.directive;
+ if(st.fault_latched)return "故障锁存：等待 RESET_ERROR，之后仍需显式 RESUME。";
+ if(m?.retry_pending)return "失败尝试保持终态：等待 RESUME 创建下一次尝试。";
+ if(m?.lifecycle==="PAUSED")return st.health.low_battery?"低电暂停：等待电量恢复，再显式 RESUME。":"任务已暂停：等待显式 RESUME，重新确认动作就绪。";
+ if(!m)return st.business_mode==="CHARGING"?"等待 BATTERY_OK；有挂起任务则恢复上下文并继续等待 RESUME。":"等待新的业务命令。";
+ if(d.phase==="PREPARE"){const waiting=modules.filter(n=>st.modules[n]?.state!=="READY");return `动作准备：等待 ${waiting.join("、")||"roboframe"} 的本版本 READY。`}
+ if(d.phase==="COMMIT")return m.stage==="SAVE_MAP"?"等待 roboframe 本版本 SUCCEEDED；连通校验拒绝保留会话，其他失败停止。":"等待 roboframe 本版本 SUCCEEDED 暂存对象；失败则锁存故障并保留恢复点。";
+ return ({UNDOCK:"等待 roboframe SUCCEEDED 确认后退1.5m，随后记录回归通道。",RECORD_RETURN_CHANNEL:"等待用户遥控到首区起点并 SELECT_REGION_START。",WAIT_START:"等待选择新区域、开始通道，或结束整次建图。",BUILD_BOUNDARY:"等待 roboframe 有效闭合；也可接管或恢复自动。",BUILD_CHANNEL:"等待 FINISH_CHANNEL，进入对象提交。",MOW_REGION:"等待 roboframe 完成整个区域，再推进下一区域。",RETURN_AND_CHARGE:"等待 roboframe 确认设备充电事实后报告 SUCCEEDED。"})[m.stage]??"等待当前动作反馈。";
+}
+function decisionEvidence(s){
+ const e=s.decision;if(!e)return {input:"尚无决策输入。",change:"等待第一条输入。",next:nextCondition(s.brain)};
+ const p=e.payload??e,b=e.brain_after,a=e.brain_before,st=b.public_status,delta=changes(a,b);
+ let input=e.action==="tick"?"时钟检查触发反馈超时":e.action==="status"?`${p.module} → ${p.signal??p.state}${p.reason?" · "+why(p.reason):""}`:commandName(p);
+ // When publication clears feedback, changed revision itself is evidence of processing.
+ // With no publication, an accepted status is retained verbatim in current evidence.
+ const timedOut=e.action==="status"&&a.directive.revision!==b.directive.revision&&b.reason?.includes("status timeout");
+ const accepted=!timedOut&&(e.action!=="status"||a.directive.revision!==b.directive.revision||(st.modules[p.module]?.sequence===p.sequence&&st.modules[p.module]?.revision===p.revision&&a.public_status.modules[p.module]?.sequence!==p.sequence));
+ if(timedOut)input+="\n本轮先判定已有反馈超时，本条反馈未继续处理。";
+ else if(e.action==="status")input+=accepted?"\n反馈已记录；是否推进由当前业务条件决定。":"\n反馈未更新当前证据（版本、时效或序号不符合要求）。";
+ if(["command","event"].includes(e.action)&&b.last_event)input+=`\n${b.last_event.accepted?"受理":"拒绝"}${b.last_event.reason?"："+why(b.last_event.reason):""}`;
+ if(e.action==="status"&&a.directive.revision!==b.directive.revision&&a.directive.phase==="PREPARE"&&b.directive.phase==="EXECUTE"&&b.public_status.mission_state?.attempt===a.public_status.mission_state?.attempt)input+="\n本条 READY 确认 roboframe 就绪，开始执行。";
+ const prefix=s.eventIndex===s.decisionIndex?"本步决策":"最近决策";
+ const emitted=a.directive.revision!==b.directive.revision?`发出第 ${b.directive.revision} 版：${missionName(b.directive.mission)} / ${phases[b.directive.phase]}`:"本次未下发新指令。";
+ return {input:`${prefix} · 原始记录 ${s.decisionIndex+1}\n${input}`,change:delta.join("\n")||"业务状态未转换。" ,next:emitted+"\n"+nextCondition(b)};
+}
+function drawStateGraph(id,nodes,edges,current,previous,visited){
+ const svg=$(id);svg.replaceChildren();const ns="http://www.w3.org/2000/svg";
+ const el=(tag,attrs,text,parent=svg)=>{const n=document.createElementNS(ns,tag);for(const[k,v]of Object.entries(attrs))n.setAttribute(k,v);if(text)n.textContent=text;parent.append(n);return n};
+ const defs=el("defs",{}),marker=el("marker",{id:id+"-arrow",viewBox:"0 0 10 10",refX:9,refY:5,markerWidth:6,markerHeight:6,orient:"auto"},null,defs);el("path",{d:"M0 0L10 5L0 10Z",fill:"#64767c"},null,marker);
+ for(const[a,b,path,label,x,y]of edges){el("path",{d:path,class:"state-edge"+(previous===a&&current===b?" changed":""),"marker-end":`url(#${id}-arrow)`});el("text",{x,y,"text-anchor":"middle",class:"edge-caption"},label)}
+ for(const[key,x,y]of nodes){const active=key===current,prior=key===previous&&!active;const g=el("g",{class:"state-node"+(active?" current":prior?" previous":""),"aria-label":`${active?"当前：":prior?"转换前：":""}${key}`});el("rect",{x:x-75,y:y-23,width:150,height:46,rx:5},null,g);el("text",{x,y:y-3,"text-anchor":"middle",style:"font-size:11px;font-family:Consolas,monospace"},`${active?"● ":visited.has(key)?"✓ ":""}${key}`,g);el("text",{x,y:y+15,"text-anchor":"middle",style:"font-size:10px"},businessNames[key]??stageLabels[key]??key,g)}
+}
+function showStateMachines(s){
+ const b=s.brain,st=b.public_status,now=st.mission_state,shown=now??st.last_mission_result;
+ const actual=s.event.brain_before?.public_status,prev=actual?.mission_state;
+ const visited=new Set();
+ for(const e of run.events.slice(0,s.eventIndex+1)){const q=e.brain_after?.public_status;for(const m of [q?.mission_state,q?.last_mission_result])if(shown&&m&&missionKey(m)===missionKey(shown))visited.add(m.stage)}
+ drawStateGraph("mode-graph",modeNodes,modeEdges,st.business_mode,actual?.business_mode,new Set());
+ $("mode-note").textContent=`当前：${st.business_mode}（${businessNames[st.business_mode]}）。暂停和故障保留所属业务；作业完成一个目标可保持WORKING并推进下一个。`;
+ $("execution-context").textContent=[st.mapping?`已暂存区域：${st.mapping.regions.map(targetName).join("、")||"无"}；普通通道：${st.mapping.channels.map(targetName).join("、")||"无"}`:st.task?`当前任务已完成目标 ${st.task.completed_targets.length} / ${st.task.total_targets}`:"当前无活动任务",st.suspended_mission?`挂起：${executionLabel(st.suspended_mission)}（${st.suspended_mission.lifecycle}），保留已完成目标 ${st.suspended_task.completed_targets.length} 个`:""].filter(Boolean).join("；");
+ const strip=$("lifecycle-strip");strip.replaceChildren();
+ const label=document.createElement("span");label.textContent=now?`执行状态 · 尝试 ${now.attempt}`:shown?`最近结果：${shown.result} · 尝试 ${shown.attempt}`:"无活动执行";strip.append(label);
+ for(const life of ["PREPARE","RUNNING","PAUSED","SUCCESS","FAILED"]){const n=document.createElement("span");n.className="life"+((now?.lifecycle??(shown?.result!=="cancelled"?shown?.lifecycle:null))===life?" active":"");n.textContent=life;strip.append(n)}
+ let current=now?.stage??(shown?.result==="completed"?"SUCCESS":null),previous=missionKey(prev)===missionKey(shown)?prev?.stage:null;
+ if(previous===current&&prev?.action.control===now?.action.control)previous=null;
+ if(shown?.type==="MAPPING"){
+  $("mission-graph-title").textContent="第二层 · 整次建图会话";drawStateGraph("mission-graph",mappingNodes,mappingEdges,current,previous,visited);
+  $("mission-boundary").textContent="同一会话循环创建区域和通道；对象暂存成功不等于整次建图完成。行为树尚未接入。";
+ }else{
+  const returning=shown?.type==="RETURN_HOME",key=returning?"RETURN_AND_CHARGE":"MOW_REGION";
+  $("mission-graph-title").textContent=shown?`第二层 · ${returning?"一次回充":"一次区域割草"}`:"第二层 · 等待业务";
+  const nodes=shown?[[key,250,90],["SUCCESS",640,90]]:[];
+  const edges=shown?[[key,"SUCCESS","M325 90H565","roboframe SUCCEEDED",447,79]]:[];
+  drawStateGraph("mission-graph",nodes,edges,current,previous,visited);
+  $("mission-boundary").textContent=shown?(returning?"roboframe 内部协调导航、对桩和设备充电确认；Brain 接收整个回充任务结果。":"Brain 只管理区域顺序；沿边、覆盖与实际作业记录在 roboframe 内部。暂停和回充后以原任务标识继续。") :"开始任务后显示业务阶段。";
+
+ }
+ $("mission-graph").setAttribute("viewBox",shown?.type==="MAPPING"?"0 0 900 330":"0 0 900 180");
+ $("mission-note").textContent=now?`${targetName(now.target_id)||now.type} · ${now.retry_pending?"等待重试":now.lifecycle==="PAUSED"?"暂停，保留恢复点":now.lifecycle==="FAILED"?"失败，保留恢复点":stageLabels[now.stage]}`:shown?"已结束，展示最近执行结果":"尚未开始";
+ $("stage-exits").textContent=nextCondition(b);
+ const evidence=decisionEvidence(s);for(const[name,value]of Object.entries(evidence))$("decision-"+(name==="change"?"change":name==="next"?"next":"input")).textContent=value;
+}
+
 function showInside(s){
   const e=s.event,p=e.payload??e,b=s.brain,previous=e.brain_before;
   $("inside-action").textContent=describe(s).title;
   $("inside-input").textContent=JSON.stringify(p,null,2);
   $("inside-grid").hidden=!b;
+  $("state-board").hidden=!b;
   if(!b){$("inside-change").textContent="此步骤尚无 Brain 决策快照，请前进到第一条输入。";$("inside-trace").textContent="没有使用后续帧推测当前状态。";return}
   const state=b.public_status,d=b.directive,h=state.health;
+  showStateMachines(s);
   $("inside-change").textContent=previous?(previous.directive.revision!==d.revision?`本次处理：第 ${previous.directive.revision} 版 → 第 ${d.revision} 版 · ${modes[d.mode]} / ${phases[d.phase]}`:"本次处理没有改变控制版本；下方显示处理后的实际状态。"):"下方显示最近一次真实决策快照；与共享时间线同步。";
-  $("inside-mode").textContent=`${d.mode} · ${modes[d.mode]??d.mode}`;
+  const businessMode=state.business_mode??d.mode,mission=state.mission_state;
+  $("inside-mode").textContent=`${businessMode} · ${businessMode==="RETURN_TO_CHARGE"?"回充":modes[businessMode]??businessMode}`;
+  $("inside-wire-mode").textContent=`原型协议模式：${d.mode} · 故障锁存：${state.fault_latched?"已锁存":"未锁存"}`;
+  $("inside-lifecycle").textContent=mission?`${mission.lifecycle} · 第 ${mission.attempt} 次尝试${mission.retry_pending?" · 等待显式重试":""}`:"无活动 Mission";
+  const stageNames={UNDOCK:"从充电站自动后退1.5米",RECORD_RETURN_CHANNEL:"请遥控到第一个区域起点 · 记录回归通道",WAIT_START:"等待用户到起点 / 遥控转场",BUILD_BOUNDARY:"建边界",BUILD_CHANNEL:"建通道",COMMIT_OBJECT:"提交当前对象",SAVE_MAP:"保存整张地图",MOW_REGION:"当前区域割草",RETURN_AND_CHARGE:"返回并确认充电"};
+  $("inside-stage").textContent=mission?`业务阶段：${stageNames[mission.stage]??mission.stage} (${mission.stage})`:"业务阶段：无";
+  const lastMission=state.last_mission_result;
+  $("inside-last-result").textContent=lastMission?`最近执行结果：${lastMission.result} · ${lastMission.target_id??lastMission.type} · 第 ${lastMission.attempt} 次尝试（${lastMission.lifecycle}）`:"尚无执行结果";
   $("inside-context").textContent=state.mapping?`保留建图会话 ${state.mapping.session_id}`:state.task?`保留业务请求 ${state.task.task_id}`:"当前没有活动业务上下文";
   $("inside-task").textContent=state.mapping?`当前对象：${missionName(state.mapping.current)}`:state.task?`当前目标：${targetName(state.task.current_target)}`:"没有活动任务";
   $("inside-progress").textContent=state.mapping?`已提交区域：${state.mapping.regions.join("、")||"无"}；通道：${state.mapping.channels.join("、")||"无"}`:state.task?`已完成 ${state.task.completed_targets.length} / ${state.task.total_targets} 个目标`:state.last_task_result?`最近任务结果：${state.last_task_result.result}`:"等待上层开始业务";
-  $("inside-suspended").textContent=state.suspended_task?`挂起任务：${state.suspended_task.task_id} · 已完成 ${state.suspended_task.completed_targets.length} 个目标`:"挂起任务：无";
-  $("inside-phase").textContent=`实际 Action：${d.phase} · ${phases[d.phase]}`;
+  $("inside-suspended").textContent=state.suspended_task?`挂起任务：${state.suspended_task.task_id} · 已完成 ${state.suspended_task.completed_targets.length} 个目标 · ${state.suspended_mission?.lifecycle??""}`:"挂起任务：无";
+  $("inside-phase").textContent=mission?`动作握手 / 恢复点：${mission.action_phase}；当前下发：${d.phase} · ${phases[d.phase]}`:`当前下发：${d.phase} · ${phases[d.phase]}`;
   $("inside-battery").textContent=h?.low_battery?"电量事实：低电已锁存":"电量事实：无低电锁存";
   $("inside-capabilities").replaceChildren();
-  const capabilityNames={navigation:"导航",manual_drive:"手动控制",mapping:"建图",map_commit:"地图提交"};
+  const capabilityNames={current_action:"当前任务执行"};
   for(const [name,c] of Object.entries(h?.capabilities??{})){
     const row=document.createElement("div");row.className="cap-row";
     const label=document.createElement("span");label.textContent=capabilityNames[name]??name;
@@ -179,13 +324,13 @@ function showInside(s){
   const causeName={NO_CURRENT_STATUS:"尚无本版本反馈",STATUS_TIMEOUT:"反馈超时"};
   list("inside-causes",h?.causes?.length?h.causes.map(c=>`${c.module}：${causeName[c.reason]??why(c.reason)}`):["本版本没有缺失、过期或失败证据"]);
   const ready=modules.filter(n=>state.modules[n]?.state==="READY").length;
-  $("inside-gate").textContent=d.phase==="PREPARE"?`准备屏障：${ready} / 3 模块 READY`:d.phase==="COMMIT"?"提交完成方：map_manager；收到本版本 SUCCEEDED 才记入进度":d.phase==="EXECUTE"?(state.mapping?"建图：等待用户操作或有效闭合事实，由业务分支决定下一步":"目标完成方：PNC；收到本版本 SUCCEEDED 才推进目标"):"当前不执行动作；暂停或故障不会因健康恢复而自动续作";
+  $("inside-gate").textContent=d.phase==="PREPARE"?`准备屏障：${ready} / 1 个 roboframe READY`:d.phase==="COMMIT"?"提交完成方：roboframe；收到本版本 SUCCEEDED 才记入进度":d.phase==="EXECUTE"?(state.mapping?"建图：等待用户操作或有效闭合事实，由业务分支决定下一步":"目标完成方：roboframe；收到本版本 SUCCEEDED 才推进目标"):"当前不执行动作；暂停或故障不会因健康恢复而自动续作";
   list("inside-ready",modules.map(n=>`${n}：${state.modules[n]?`${states[state.modules[n].state]??state.modules[n].state} · 第 ${state.modules[n].revision} 版`:"未收到本版本反馈"}`));
   $("inside-output").textContent=missionName(d.mission);
   $("inside-reason").textContent=b.reason?`业务原因：${why(b.reason)}`:"业务原因：无暂停或故障原因";
   $("inside-result").textContent=["command","event","command_result"].includes(e.action)&&b.last_event?`本次受理：${b.last_event.accepted?"接受":"拒绝"}${b.last_event.reason?" · "+why(b.last_event.reason):""}`:`控制版本：${d.revision}`;
   $("inside-directive").textContent=JSON.stringify(d,null,2);$("inside-snapshot").textContent=JSON.stringify(b,null,2);
-  $("inside-trace").textContent=`证据：原始记录第 ${s.brainEvent+1} 条的 Brain 快照。${e.brain_before?"当前展示这条输入处理完成后的状态；模块交互视角仍按消息交付顺序显示随后下发的指令。":"环境变化本身不代表 Brain 已处理；仅展示不晚于当前记录的快照。"} 实线为已有实现，虚线行为树仅为设计预览。`;
+  $("inside-trace").textContent=`证据：原始记录第 ${s.brainEvent+1} 条的 Brain 快照。${e.brain_before?"当前展示这条输入处理完成后的状态；进程交互视角仍按消息交付顺序显示随后下发的指令。":"环境变化本身不代表 Brain 已处理；仅展示不晚于当前记录的快照。"} 状态图的边是现有规则；高亮与变化仅来自实际快照。行为树尚未接入。`;
 }
 function setView(internal){$("inside").hidden=!internal;$("outside").hidden=internal;$("view-brain").setAttribute("aria-pressed",String(internal));$("view-modules").setAttribute("aria-pressed",String(!internal))}
 $("view-brain").onclick=()=>setView(true);$("view-modules").onclick=()=>setView(false);
@@ -195,7 +340,7 @@ function show(){
   $("direction").textContent=`${names[e.source]??e.source} → ${names[e.target]??e.target??"场景"}`;$("headline").textContent=desc.title;$("explanation").textContent=desc.detail;
   $("brain-mode").textContent=`${modes[d.mode]??d.mode} · ${d.phase==="PREPARE"?"准备":d.phase==="COMMIT"?"提交":d.phase==="EXECUTE"?"执行":"等待"}`;$("brain-mission").textContent=missionName(d.mission);
   const ready=modules.filter(n=>s.statuses[n]?.state==="READY").length;
-  $("brain-wait").textContent=d.phase==="PREPARE"?`第 ${d.revision} 版 · ${ready} / 3 模块已就绪`:d.phase==="COMMIT"?`第 ${d.revision} 版 · 等待地图保存确认`:`第 ${d.revision} 版 · 接收外部事件与模块状态`;
+  $("brain-wait").textContent=d.phase==="PREPARE"?`第 ${d.revision} 版 · ${ready} / 1 个 roboframe已就绪`:d.phase==="COMMIT"?`第 ${d.revision} 版 · 等待地图保存确认`:`第 ${d.revision} 版 · 接收外部事件与模块状态`;
   $("mode").textContent=modes[d.mode]??d.mode;$("phase").textContent=phases[d.phase]??d.phase;$("mission").textContent=missionName(d.mission);$("map-id").textContent=d.mission?.map_id??"—";$("revision").textContent=`第 ${d.revision} 版`;$("external-value").textContent=s.operator;$("receipt").textContent=s.receipt;
   $("world-value").textContent=s.position?`位置 (${s.position.join(", ")})`:"由场景脚本提供";
   for(const name of modules){
@@ -209,7 +354,7 @@ function show(){
   if(e.action==="mode_mission"){active("node-brain");for(const n of modules){active("down-"+n);active("node-"+n)}$("lower-label").textContent=desc.short+" · "+missionName(d.mission)}
   else if(e.action==="status"){active("node-"+e.source);active("up-"+e.source);active("node-brain");$("lower-label").textContent=`${e.source} → brain：${desc.short}`}
   else if(e.action==="command"||e.action==="event"||e.action==="command_result"){active("node-external");active("node-brain");active(e.action==="command_result"?"reply-wire":"command-wire");$("upper-label").textContent=desc.short}
-  else {active("node-world");if(e.action==="position"){active("world-wire");active("node-perception")}else if(p.module)active("node-"+p.module)}
+  else {active("node-world");if(e.action==="position"){active("world-wire");active("node-roboframe")}else if(p.module)active("node-"+p.module)}
   $("payload-kind").textContent=e.action==="mode_mission"?"directive":e.action;
   $("payload").textContent=JSON.stringify(p,null,2);$("payload").scrollTop=0;$("payload").scrollLeft=0;
   $("raw").textContent=JSON.stringify(e,null,2);$("directive").textContent=JSON.stringify(d,null,2);drawMap(s);showInside(s);
@@ -221,7 +366,7 @@ function play(){if(timer){stop();return}if(Number($("step").value)===steps.lengt
 function select(){
   stop();run=runs[Number($("scenario").value)];steps=buildSteps(run);$("description").textContent=run.description;$("step").max=Math.max(0,steps.length-1);$("step").value=0;$("jump").replaceChildren();
   const addJump=(i,label)=>{const o=document.createElement("option");o.value=i;o.textContent=`${i+1}. ${label}`;$("jump").append(o)};
-  steps.forEach((s,i)=>{const e=s.event,p=e.payload??e;if(i===0||e.action==="command"||e.action==="event"||e.action==="fault"||e.action==="status"&&(p.signal||["REJECTED","FAILED","BLOCKED"].includes(p.state))||i===steps.length-1)addJump(i,describe(s).title)});
+  steps.forEach((s,i)=>{const e=s.event,p=e.payload??e;if(e.action==="mode_mission"&&p.phase==="EXECUTE"&&["UNDOCK","MAP_RETURN_CHANNEL","MOW_REGION"].includes(p.mission?.type)){addJump(i,missionName(p.mission));return}if(i===0||e.action==="command"||e.action==="event"||e.action==="fault"||e.action==="tick"||e.action==="status"&&(p.signal||["REJECTED","FAILED","BLOCKED"].includes(p.state))||i===steps.length-1)addJump(i,describe(s).title)});
   $("step-note").textContent=`按真实消息顺序回放 · ${run.events.length} 条原始消息，合并 ${run.events.length-steps.length} 条重复状态 / 进度更新 · 用 ← → 逐步查看，也可直接跳转到业务动作。`;
   const passed=run.checks.filter(c=>c.passed).length;$("check-summary").textContent=`场景验收 · ${passed} / ${run.checks.length} 通过`;$("check-summary").className=passed===run.checks.length?"pass":"fail";$("checks").replaceChildren();
   for(const c of run.checks){const li=document.createElement("li");li.className=c.passed?"pass":"fail";li.textContent=(c.passed?"通过 · ":"失败 · ")+c.name;if(!c.passed){const pre=document.createElement("pre");pre.textContent=JSON.stringify({expected:c.expected,actual:c.actual},null,2);li.append(pre)}$("checks").append(li)}

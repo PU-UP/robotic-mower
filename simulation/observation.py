@@ -1,4 +1,4 @@
-"""Perception data plane. SLAM maps remain internal to this module."""
+"""Immutable localization sample for the roboframe simulation substitute."""
 from dataclasses import dataclass
 
 

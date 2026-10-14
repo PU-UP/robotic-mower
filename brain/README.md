@@ -1,26 +1,16 @@
-# brain
+# Brain
 
-brain 管理完整业务逻辑：任务顺序、已完成进度、暂停、抢占、恢复和错误策略。算法同层的数据不穿过 brain。
+Brain 管业务任务、区域顺序、暂停、低电回充和恢复决策，当前只对接单一 roboframe 任务入口。原三进程协议已移除；实际 WSL roboframe 尚未接入，本仓库用替身验证职责边界。
 
-目标架构见 [Brain 设计：分层状态机 + 按需行为树](DESIGN.md)：Mode 管大业务，Mission 管生命周期与业务阶段，复杂阶段按需使用行为树。第一步已提取 [Health / Event Manager](health.py)，负责反馈过滤、超时事实、就绪确认、事件去重、低电状态和能力快照；业务决策仍在 Brain。内部 Mode/Mission 拆分与行为树尚未接入。
+- [设计与职责](DESIGN.md)：Brain 状态机与 roboframe 内部 BT 的分工。
+- [状态机基线](STATE_MACHINES.md)：当前可达转换、恢复条件与缺口。
+- [原型协议](PROTOCOL.md)：命令、事件、directive、roboframe status 与回执。
+- [建图流程](MAPPING.md)：退桩、回归通道、区域与通道、接管和保存。
 
-本轮以 [输入输出协议](PROTOCOL.md) 为准。directive 已按用户提出的结构收敛：
+`Brain.receive(kind, payload, now)` 接收 command/event/status，返回 directive/command_result/brain_status。`Brain.tick(now)` 在没有消息时检查超时。内部入口 handle 接收 Event 或 Status，不接收算法数据。
 
-```json
-{
-  "revision": 4,
-  "mode": "WORKING",
-  "phase": "EXECUTE",
-  "mission": {"type": "COVER_REGION", "map_id": "garden", "target_id": "region-2", "control": "AUTO"}
-}
-```
+实现分为 Brain 的业务调度和统一输出、HealthEventManager 的证据过滤和去重、MissionExecution/MappingSession 的生命周期与建图业务阶段。Brain 不增加算法执行 BT；区域内动作归 roboframe。
 
-入口：`Brain.receive(kind, payload, now)`，kind 为 `command / event / status`。输出集合为 `directive / command_result / brain_status`，便于仿真或未来通信适配器分别发布。`Brain.tick(now)` 负责没有消息时检查状态超时。
+暂停与回充后的作业使用原 task_id；Brain 保留区域级进度，空间覆盖记录归 roboframe。回充成功需 roboframe 确认设备充电事实，不能只以导航到站报告成功。这些协议语义已有替身测试，真实设备能力仍待核实。
 
-`Brain.handle(Event | Status, now)` 是内部状态机入口；内部完整 Mission 和 Task 不作为下层接口。WorkItem 是当前目标的值类型，经 `to_dict()` 序列化为精简 mission。
-
-现有状态机保留为可运行示例，业务尚未定稿。后续每个任务按以下顺序推进：明确上层意图与完成条件 → 三模块职责 → 正常/异常交互脚本 → 修改 brain 规则 → 验证。具体边界与当前简化见协议末尾。
-
-可以先阅读 [两区域协议示例](../simulation/scenarios/cover_regions.json)：它会在 revision 4 产生上面的完整 directive。再看 [暂停/迟到反馈/超时示例](../simulation/scenarios/pause_and_timeout.json)。
-
-首个明确业务已实现：[建图业务 01：两个区域与一条通道](MAPPING.md)。START_MAPPING 只接收 map_id；区域选择、沿边、接管、通道和最终保存是会话内独立交互。
+运行 `python -m simulation` 生成总回放，或用 `--script simulation/scenarios/mission_lifecycle.json` 查看独立生命周期验收。

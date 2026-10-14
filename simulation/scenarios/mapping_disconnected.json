@@ -1,0 +1,488 @@
+{
+  "name": "mapping_disconnected",
+  "description": "反例：区域2没有包含普通通道另一头，保存被拒绝并保留会话，用户可继续修正建图。",
+  "feedback": "auto",
+  "mapped": false,
+  "duration": 10.0,
+  "steps": [
+    {
+      "at": 0,
+      "command": {
+        "command_id": "mapping-1",
+        "type": "START_MAPPING",
+        "params": {
+          "map_id": "new-garden"
+        }
+      }
+    },
+    {
+      "at": 0.05,
+      "label": "从充电桩开始，先自动退桩",
+      "expect": {
+        "directive": {
+          "mission": {
+            "type": "UNDOCK",
+            "target_id": "dock",
+            "control": "AUTO"
+          }
+        },
+        "brain_status": {
+          "mission_state": {
+            "stage": "UNDOCK"
+          }
+        }
+      }
+    },
+    {
+      "at": 0.7,
+      "label": "退桩未满1.5米时不开放遥控建图",
+      "expect": {
+        "directive": {
+          "phase": "EXECUTE",
+          "mission": {
+            "type": "UNDOCK"
+          }
+        }
+      }
+    },
+    {
+      "at": 1.35,
+      "label": "自动后退1.5米后，要求用户遥控到首区域起点并记录回归通道",
+      "expect": {
+        "directive": {
+          "phase": "EXECUTE",
+          "mission": {
+            "type": "MAP_RETURN_CHANNEL",
+            "control": "MANUAL"
+          }
+        },
+        "brain_status": {
+          "mapping": {
+            "regions": [],
+            "channels": []
+          }
+        }
+      }
+    },
+    {
+      "at": 1.4,
+      "world": {
+        "position": [
+          -1,
+          0
+        ]
+      }
+    },
+    {
+      "at": 1.6,
+      "world": {
+        "position": [
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "at": 1.7,
+      "command": {
+        "command_id": "region-1-start",
+        "type": "SELECT_REGION_START",
+        "params": {
+          "region_id": "region-1"
+        }
+      }
+    },
+    {
+      "at": 1.95,
+      "label": "选择起点后等待用户触发自动沿边，不误报闭合",
+      "expect": {
+        "directive": {
+          "mission": {
+            "type": "MAP_REGION",
+            "target_id": "region-1",
+            "control": "MANUAL"
+          }
+        },
+        "brain_status": {
+          "mapping": {
+            "regions": []
+          }
+        }
+      }
+    },
+    {
+      "at": 2.0,
+      "command": {
+        "command_id": "edge-1",
+        "type": "START_EDGE_FOLLOW"
+      }
+    },
+    {
+      "at": 2.3,
+      "world": {
+        "position": [
+          4,
+          0
+        ]
+      }
+    },
+    {
+      "at": 2.4,
+      "label": "区域1进入自动沿边",
+      "expect": {
+        "directive": {
+          "phase": "EXECUTE",
+          "mission": {
+            "type": "MAP_REGION",
+            "control": "AUTO"
+          }
+        }
+      }
+    },
+    {
+      "at": 2.5,
+      "command": {
+        "command_id": "takeover-1",
+        "type": "TAKE_OVER"
+      }
+    },
+    {
+      "at": 2.8,
+      "world": {
+        "position": [
+          4,
+          4
+        ]
+      }
+    },
+    {
+      "at": 2.9,
+      "label": "用户接管后仍属于同一区域和建图会话",
+      "expect": {
+        "directive": {
+          "mode": "MAPPING",
+          "phase": "EXECUTE",
+          "mission": {
+            "type": "MAP_REGION",
+            "target_id": "region-1",
+            "control": "MANUAL"
+          }
+        },
+        "brain_status": {
+          "mapping": {
+            "regions": []
+          }
+        }
+      }
+    },
+    {
+      "at": 3.0,
+      "command": {
+        "command_id": "edge-1-continue",
+        "type": "START_EDGE_FOLLOW"
+      }
+    },
+    {
+      "at": 3.3,
+      "world": {
+        "position": [
+          0,
+          4
+        ]
+      }
+    },
+    {
+      "at": 3.6,
+      "world": {
+        "position": [
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "at": 4.1,
+      "label": "地图模块检测闭合并提交区域1，会话继续",
+      "expect": {
+        "directive": {
+          "mode": "MAPPING",
+          "phase": "EXECUTE",
+          "mission": {
+            "type": "MANUAL_DRIVE"
+          }
+        },
+        "brain_status": {
+          "mapping": {
+            "regions": [
+              "region-1"
+            ],
+            "channels": []
+          }
+        }
+      }
+    },
+    {
+      "at": 4.2,
+      "world": {
+        "position": [
+          9,
+          9
+        ]
+      }
+    },
+    {
+      "at": 4.4,
+      "command": {
+        "command_id": "channel-outside",
+        "type": "START_CHANNEL",
+        "params": {
+          "channel_id": "channel-1"
+        }
+      }
+    },
+    {
+      "at": 4.8,
+      "label": "区域外起点拒绝采集，返回遥控可重试",
+      "expect": {
+        "directive": {
+          "mode": "MAPPING",
+          "mission": {
+            "type": "MANUAL_DRIVE"
+          }
+        },
+        "brain_status": {
+          "mapping": {
+            "channels": [],
+            "last_result": {
+              "result": "rejected",
+              "reason": "CHANNEL_START_OUTSIDE_REGION"
+            }
+          }
+        }
+      }
+    },
+    {
+      "at": 4.9,
+      "world": {
+        "position": [
+          2,
+          2
+        ]
+      }
+    },
+    {
+      "at": 5.1,
+      "command": {
+        "command_id": "channel-inside",
+        "type": "START_CHANNEL",
+        "params": {
+          "channel_id": "channel-1"
+        }
+      }
+    },
+    {
+      "at": 5.4,
+      "label": "区域内起点通过检查，遥控采集通道",
+      "expect": {
+        "directive": {
+          "mode": "MAPPING",
+          "phase": "EXECUTE",
+          "mission": {
+            "type": "MAP_CHANNEL",
+            "target_id": "channel-1"
+          }
+        }
+      }
+    },
+    {
+      "at": 5.5,
+      "world": {
+        "position": [
+          4,
+          2
+        ]
+      }
+    },
+    {
+      "at": 5.8,
+      "world": {
+        "position": [
+          7,
+          2
+        ]
+      }
+    },
+    {
+      "at": 6.1,
+      "world": {
+        "position": [
+          9,
+          2
+        ]
+      }
+    },
+    {
+      "at": 6.3,
+      "command": {
+        "command_id": "channel-end",
+        "type": "FINISH_CHANNEL"
+      }
+    },
+    {
+      "at": 6.7,
+      "label": "通道轨迹暂存，另一端等待区域2覆盖后才能形成有效连接",
+      "expect": {
+        "directive": {
+          "mission": {
+            "type": "MANUAL_DRIVE"
+          }
+        },
+        "brain_status": {
+          "mapping": {
+            "regions": [
+              "region-1"
+            ],
+            "channels": [
+              "channel-1"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "at": 6.8,
+      "world": {
+        "position": [
+          10,
+          0
+        ]
+      }
+    },
+    {
+      "at": 7.0,
+      "command": {
+        "command_id": "region-2-start",
+        "type": "SELECT_REGION_START",
+        "params": {
+          "region_id": "region-2"
+        }
+      }
+    },
+    {
+      "at": 7.3,
+      "command": {
+        "command_id": "edge-2",
+        "type": "START_EDGE_FOLLOW"
+      }
+    },
+    {
+      "at": 7.7,
+      "world": {
+        "position": [
+          14,
+          0
+        ]
+      }
+    },
+    {
+      "at": 8.0,
+      "world": {
+        "position": [
+          14,
+          4
+        ]
+      }
+    },
+    {
+      "at": 8.3,
+      "world": {
+        "position": [
+          10,
+          4
+        ]
+      }
+    },
+    {
+      "at": 8.6,
+      "world": {
+        "position": [
+          10,
+          0
+        ]
+      }
+    },
+    {
+      "at": 9.1,
+      "label": "区域2闭合后仍等待用户结束整次建图",
+      "expect": {
+        "directive": {
+          "mode": "MAPPING",
+          "mission": {
+            "type": "MANUAL_DRIVE"
+          }
+        },
+        "brain_status": {
+          "mapping": {
+            "regions": [
+              "region-1",
+              "region-2"
+            ],
+            "channels": [
+              "channel-1"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "at": 9.3,
+      "command": {
+        "command_id": "mapping-end",
+        "type": "FINISH_MAPPING"
+      }
+    },
+    {
+      "at": 9.32,
+      "label": "结束建图先下发保存，等待地图模块确认",
+      "expect": {
+        "directive": {
+          "mode": "MAPPING",
+          "phase": "COMMIT",
+          "mission": {
+            "type": "SAVE_MAP",
+            "map_id": "new-garden"
+          }
+        }
+      }
+    },
+    {
+      "at": 9.7,
+      "label": "未连通通道禁止保存，返回转场保留全部草稿",
+      "expect": {
+        "directive": {
+          "mode": "MAPPING",
+          "mission": {
+            "type": "MANUAL_DRIVE"
+          }
+        },
+        "brain_status": {
+          "mapping": {
+            "regions": [
+              "region-1",
+              "region-2"
+            ],
+            "channels": [
+              "channel-1"
+            ],
+            "last_result": {
+              "type": "SAVE_MAP",
+              "result": "rejected",
+              "reason": "CHANNEL_NOT_CONNECTED"
+            }
+          },
+          "last_task_result": null
+        }
+      }
+    }
+  ]
+}

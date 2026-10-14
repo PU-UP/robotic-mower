@@ -4,7 +4,7 @@ import unittest
 
 from brain import Brain
 from contracts import Module, Phase, State, Status
-from map_manager import BusinessMap, Entity
+from simulation.world import BusinessMap, Entity
 from simulation.scripted import run_script
 
 
@@ -34,13 +34,15 @@ class MappingTests(unittest.TestCase):
     def start_region(self):
         self.command("START_MAPPING", map_id="new")
         self.ready()
+        self.feedback(Module.ROBOFRAME, State.SUCCEEDED)
+        self.ready()
         self.command("SELECT_REGION_START", region_id="r1")
         self.ready()
 
-    def close_region(self, module=Module.MAP_MANAGER):
+    def close_region(self, module=Module.ROBOFRAME):
         self.feedback(module, State.RUNNING, signal="REGION_CLOSED")
         self.assertEqual(self.brain.directive.phase, Phase.COMMIT)
-        self.feedback(Module.MAP_MANAGER, State.SUCCEEDED)
+        self.feedback(Module.ROBOFRAME, State.SUCCEEDED)
         self.ready()
 
     def test_takeover_reuses_region_and_waits_for_fresh_module_readiness(self):
@@ -51,38 +53,34 @@ class MappingTests(unittest.TestCase):
         result = self.command("TAKE_OVER")
         self.assertEqual(result["directive"]["mission"], {
             "type": "MAP_REGION", "map_id": "new", "target_id": "r1", "control": "MANUAL"})
-        self.feedback(Module.MAP_MANAGER, State.RUNNING, revision=old_revision, signal="REGION_CLOSED")
+        self.feedback(Module.ROBOFRAME, State.RUNNING, revision=old_revision, signal="REGION_CLOSED")
         self.assertEqual(self.brain.directive.phase, Phase.PREPARE)
-        self.feedback(Module.PERCEPTION)
-        self.feedback(Module.MAP_MANAGER)
-        self.assertEqual(self.brain.directive.phase, Phase.PREPARE)
-        self.feedback(Module.PNC)
+        self.feedback(Module.ROBOFRAME)
         self.assertEqual(self.brain.directive.phase, Phase.EXECUTE)
         self.command("START_EDGE_FOLLOW")
         self.ready()
         self.assertEqual(self.brain.directive.mission.target_id, "r1")
         self.assertEqual(self.brain.mapping.regions, [])
 
-    def test_either_detector_can_close_but_only_map_commit_completes_region(self):
-        for detector in (Module.PERCEPTION, Module.MAP_MANAGER):
-            with self.subTest(detector=detector):
-                self.setUp()
-                self.start_region()
-                revision = self.brain.directive.revision
-                self.feedback(Module.PNC, State.SUCCEEDED, signal="REGION_CLOSED")
-                self.assertEqual(self.brain.directive.phase, Phase.EXECUTE)
-                self.feedback(detector, State.RUNNING, signal="REGION_CLOSED")
-                self.assertEqual(self.brain.mapping.regions, [])
-                self.feedback(Module.PERCEPTION, State.SUCCEEDED)
-                self.assertEqual(self.brain.mapping.regions, [])
-                self.feedback(Module.MAP_MANAGER, State.SUCCEEDED)
-                self.feedback(detector, State.RUNNING, signal="REGION_CLOSED", revision=revision)
-                self.assertEqual(self.brain.mapping.regions, ["r1"])
-                self.assertEqual(self.brain.directive.mode, "MAPPING")
-                self.assertEqual(self.brain.directive.mission.type, "MANUAL_DRIVE")
+    def test_closure_requires_separate_commit_confirmation(self):
+        self.start_region()
+        revision = self.brain.directive.revision
+        self.feedback(Module.ROBOFRAME, State.SUCCEEDED)
+        self.assertEqual(self.brain.directive.phase, Phase.EXECUTE)
+        self.feedback(Module.ROBOFRAME, State.RUNNING, signal="REGION_CLOSED")
+        self.assertEqual(self.brain.mapping.regions, [])
+        self.assertEqual(self.brain.directive.phase, Phase.COMMIT)
+        self.feedback(Module.ROBOFRAME, State.SUCCEEDED, revision=revision)
+        self.assertEqual(self.brain.mapping.regions, [])
+        self.feedback(Module.ROBOFRAME, State.SUCCEEDED)
+        self.feedback(Module.ROBOFRAME, State.RUNNING, signal="REGION_CLOSED", revision=revision)
+        self.assertEqual(self.brain.mapping.regions, ["r1"])
+        self.assertEqual(self.brain.directive.mission.type, "MANUAL_DRIVE")
 
     def test_wrong_stage_commands_and_unrelated_closure_cannot_end_mapping(self):
         self.command("START_MAPPING", map_id="new")
+        self.ready()
+        self.feedback(Module.ROBOFRAME, State.SUCCEEDED)
         self.ready()
         for kind, params in (("FINISH_MAPPING", {}), ("START_CHANNEL", {"channel_id": "c1"}),
                              ("TAKE_OVER", {}), ("START_EDGE_FOLLOW", {})):
@@ -95,7 +93,7 @@ class MappingTests(unittest.TestCase):
         self.close_region()
         self.command("START_CHANNEL", channel_id="c1")
         self.ready()
-        self.feedback(Module.PERCEPTION, State.RUNNING, signal="REGION_CLOSED")
+        self.feedback(Module.ROBOFRAME, State.RUNNING, signal="REGION_CLOSED")
         self.assertEqual(self.brain.directive.mission.type, "MAP_CHANNEL")
         self.assertEqual(self.brain.directive.phase, Phase.EXECUTE)
 
@@ -104,16 +102,16 @@ class MappingTests(unittest.TestCase):
         self.close_region()
         self.command("START_CHANNEL", channel_id="c1")
         old_revision = self.brain.directive.revision
-        self.feedback(Module.MAP_MANAGER, State.REJECTED, reason="CHANNEL_START_OUTSIDE_REGION")
+        self.feedback(Module.ROBOFRAME, State.REJECTED, reason="CHANNEL_START_OUTSIDE_REGION")
         self.assertEqual(self.brain.directive.mission.type, "MANUAL_DRIVE")
         self.assertEqual(self.brain.mapping.channels, [])
         self.assertEqual(self.brain.mapping.last_result["result"], "rejected")
-        self.feedback(Module.MAP_MANAGER, State.SUCCEEDED, revision=old_revision)
+        self.feedback(Module.ROBOFRAME, State.SUCCEEDED, revision=old_revision)
         self.ready()
         self.command("START_CHANNEL", channel_id="c1")
         self.ready()
         self.command("FINISH_CHANNEL")
-        self.feedback(Module.MAP_MANAGER, State.SUCCEEDED)
+        self.feedback(Module.ROBOFRAME, State.SUCCEEDED)
         self.ready()
         self.assertEqual(self.brain.mapping.channels, ["c1"])
 
@@ -125,9 +123,9 @@ class MappingTests(unittest.TestCase):
         for kind in ("CANCEL", "PAUSE", "SELECT_REGION_START"):
             params = {"region_id": "r2"} if kind == "SELECT_REGION_START" else {}
             self.assertEqual(self.command(kind, **params)["command_result"]["state"], "REJECTED")
-        self.feedback(Module.PNC, State.SUCCEEDED)
+        self.feedback(Module.ROBOFRAME, State.RUNNING)
         self.assertEqual(self.brain.directive.mode, "MAPPING")
-        self.feedback(Module.MAP_MANAGER, State.SUCCEEDED)
+        self.feedback(Module.ROBOFRAME, State.SUCCEEDED)
         self.assertEqual(self.brain.directive.mode, "IDLE")
         self.assertEqual(self.brain.status()["last_task_result"]["regions"], ["r1"])
 
@@ -135,17 +133,17 @@ class MappingTests(unittest.TestCase):
         result = run_script(Path(__file__).with_name("scenarios") / "mapping_session.json")
         self.assertTrue(all(c["passed"] for c in result["checks"]))
         entities = {e["entity_id"]: e for e in result["business_map"]["entities"]}
-        self.assertEqual(set(entities), {"region-1", "region-2", "channel-1"})
+        self.assertEqual(set(entities), {"dock", "return-channel", "region-1", "region-2", "channel-1"})
         self.assertEqual(entities["region-1"]["points"], ((0, 0), (4, 0), (4, 4), (0, 4)))
         channel = entities["channel-1"]
         self.assertEqual(channel["start_region_id"], "region-1")
         self.assertEqual(channel["points"], ((2, 2), (4, 2), (7, 2), (9, 2)))
         self.assertEqual(result["business_map"]["revision"], 3)
-        manual_frames = [f for f in result["frames"] if 1.6 <= f["time"] <= 1.7]
+        manual_frames = [f for f in result["frames"] if 2.8 <= f["time"] <= 2.9]
         self.assertTrue(manual_frames)
-        self.assertTrue(all(f["modules"]["pnc"]["control"] == "MANUAL" for f in manual_frames))
-        self.assertTrue(all(f["modules"]["pnc"]["control"] == "STOPPED" for f in result["frames"]
-                            if f["modules"]["pnc"]["revision"] == f["brain"]["directive"]["revision"]
+        self.assertTrue(all(f["modules"]["roboframe"]["control"] == "MANUAL" for f in manual_frames))
+        self.assertTrue(all(f["modules"]["roboframe"]["control"] == "STOPPED" for f in result["frames"]
+                            if f["modules"]["roboframe"]["revision"] == f["brain"]["directive"]["revision"]
                             and f["brain"]["directive"]["phase"] == "PREPARE"))
 
     def test_low_battery_during_object_commit_pauses_after_counting_once(self):
@@ -154,7 +152,7 @@ class MappingTests(unittest.TestCase):
                 self.setUp()
                 self.start_region()
                 if kind == "region":
-                    self.feedback(Module.MAP_MANAGER, State.RUNNING, signal="REGION_CLOSED")
+                    self.feedback(Module.ROBOFRAME, State.RUNNING, signal="REGION_CLOSED")
                 else:
                     self.close_region()
                     self.command("START_CHANNEL", channel_id="c1")
@@ -163,8 +161,8 @@ class MappingTests(unittest.TestCase):
                 revision = self.brain.directive.revision
                 self.brain.receive("event", {"event_id": "low", "type": "LOW_BATTERY"}, self.now)
                 self.assertEqual(self.brain.directive.phase, Phase.COMMIT)
-                self.feedback(Module.MAP_MANAGER, State.SUCCEEDED)
-                self.feedback(Module.MAP_MANAGER, State.SUCCEEDED, revision=revision)
+                self.feedback(Module.ROBOFRAME, State.SUCCEEDED)
+                self.feedback(Module.ROBOFRAME, State.SUCCEEDED, revision=revision)
                 self.assertEqual(self.brain.directive.mode, "PAUSED")
                 self.assertIsNone(self.brain.directive.mission)
                 self.assertEqual(self.brain.mapping.regions, ["r1"])
@@ -183,7 +181,7 @@ class MappingTests(unittest.TestCase):
         self.assertEqual(self.brain.mapping.last_result["result"], "completed")
         self.command("FINISH_MAPPING")
         self.brain.receive("event", {"event_id": "low", "type": "LOW_BATTERY"}, self.now)
-        self.feedback(Module.MAP_MANAGER, State.SUCCEEDED)
+        self.feedback(Module.ROBOFRAME, State.SUCCEEDED)
         self.assertEqual(self.brain.directive.mode, "IDLE")
         self.brain.status()["last_task_result"]["regions"].clear()
         self.brain.view()["history"][-1]["regions"].clear()

@@ -63,11 +63,12 @@ def run_script(path):
                     or any(type(v) not in (int, float) or not math.isfinite(v) for v in position)):
                 raise ValueError("world position must contain two finite coordinates")
             sim.position = tuple(position)
-            sim.record("world", "position", target="perception", payload=step["world"])
+            sim.record("world", "position", target="roboframe", payload=step["world"])
         elif "fault" in step:
             fault = step["fault"]
             object_fields(fault, ("module",), ("reason", "silent"))
-            module = sim.modules[Module(fault["module"])]
+            Module(fault["module"])
+            module = sim.runtime
             if "reason" in fault:
                 if not isinstance(fault["reason"], str):
                     raise ValueError("fault reason must be a string (empty string clears it)")
@@ -86,5 +87,5 @@ def run_script(path):
     sim.until(spec["duration"])
     return {"scenario": spec["name"], "description": spec["description"], "checks": checks,
             "frames": sim.frames, "events": sim.events, "final": sim.brain.view(),
-            "business_map": asdict(sim.modules[Module.MAP_MANAGER].business_map)
-                if sim.modules[Module.MAP_MANAGER].business_map else None}
+            "business_map": asdict(sim.runtime.business_map)
+                if sim.runtime.business_map else None}

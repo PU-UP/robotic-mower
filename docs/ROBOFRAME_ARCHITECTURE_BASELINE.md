@@ -11,7 +11,7 @@
 ## 1. 已明确的架构方向
 
 - Brain 已存在，业务职责基本维持：管理业务模式、任务顺序、进度、中断与恢复。
-- 原先 perception、map_manager、pnc 三个算法进程合并到 roboframe 单一算法进程 `robot_runtime`；原目录仍表示当前 Python 原型的逻辑职责，不限定未来组件数量。
+- 原先 perception、map_manager、pnc 三个算法进程合并到 roboframe 单一算法进程 `robot_runtime`；旧目录已在 Python 原型重构中撤去，有用数据模型迁入 simulation；不限定未来组件数量。
 - roboframe 实际工作区为 WSL2 `Ubuntu-22.04` 中的 `/home/watermango/work/roboframe`，仓库为 [PU-UP/roboframe](https://github.com/PU-UP/roboframe)。本仓库尚未完成与它的实际接入。
 - 沿用 roboframe 的 interface → integration → component 分层。integration 负责产品装配、接线、跨组件对时与编排；算法计算及融合归 component。组件之间通过公开数据与 integration 接线，不直接依赖彼此实现。
 - Odom 表示必须具备的局部运动估计能力，可以由 DR、VIO、LIO 或组合实现提供；实际组件可以叫 `LIOComponent` 等，不要求统一命名或增加一层 Odom 包装。
@@ -261,8 +261,8 @@ Controller 持续运行表示控制执行链持续获得调度，处理反馈、
 
 ## 7. 与当前原型的关系
 
-本次没有改变 `perception/`、`map_manager/`、`pnc/` 的 Python 接口，也没有将它们机械映射为三个 roboframe 组件。现有 Brain 协议与仿真继续用于业务验证；本图用于下一阶段的算法能力和组件关系讨论。
+2026-10-14 已将 Python Brain 和仿真改为单一 roboframe 任务入口，撤去旧三个算法产品目录；Brain 每次下发整个区域割草目标，并在恢复时保留原任务标识。地图、观测和路径数据模型迁入 simulation，替身验证内存作业记录及刀盘/充电确认边界。实际组件、BT、Foundation 和生产接口均未接入；本图仍是目标能力基线，不应把替身当作组件实现。重构范围见 [计划记录](BRAIN_ROBOFRAME_REFACTOR.md)。
 
-本轮确认的 CoverageManager、BladeComponent、充电桩感知与 Controller 对桩模式均为目标架构职责，不代表当前原型已经实现。现有原型关于全部历史进度留在 Brain、未完成区域重新执行的描述仍反映旧实现；目标职责在此细分为 Brain 的任务层进度与 CoverageManager 的空间进度，本轮未修改相关协议或代码。
+CoverageManager、BladeComponent、充电桩感知与 Controller 对桩模式均为目标组件职责，真实组件尚未实现。Python 替身已区分 Brain 的区域级进度与算法侧的任务空间记录，不再要求未完成区域全部重做；记录格式、持久化及真实剩余范围规划仍待设计。
 
-实际接入、性能、地图一致性及运动闭环均未由本次文档工作验证。后续确定某项边界时更新本基线，明确其从“待定”变为“已确认”，再开展相应接口与实现设计。
+实际接入、性能、地图一致性及运动闭环均未由本次原型重构验证。后续确定某项边界时更新本基线，明确其从“待定”变为“已确认”，再开展相应接口与实现设计。

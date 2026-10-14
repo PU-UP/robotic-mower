@@ -1,39 +1,12 @@
 """Business state machine. Inputs: Event / Status. Output: mode + current mission."""
-from dataclasses import asdict, dataclass, field, replace
+from dataclasses import asdict
 from copy import deepcopy
 import math
 
 from brain.health import HealthEventManager
+from brain.mission import BusinessMode, Lifecycle, MappingSession, Task
 
-from contracts import Directive, Event, EventKind, Mission, MissionKind, Module, Mode, Phase, State, Status, WorkItem, MissionType, command_event, system_event, identifier, Control
-
-
-@dataclass
-class Task:
-    mission: Mission
-    cursor: int = 0
-
-    def current(self):
-        m = self.mission
-        kind = {MissionKind.MOW: MissionType.COVER_REGION,
-                MissionKind.RETURN_HOME: MissionType.RETURN_HOME}[m.kind]
-        return WorkItem(kind, m.map_id, m.targets[self.cursor], Control.AUTO)
-
-
-@dataclass
-class MappingSession:
-    session_id: str
-    map_id: str
-    current: WorkItem
-    regions: list[str] = field(default_factory=list)
-    channels: list[str] = field(default_factory=list)
-    phase: Phase = Phase.PREPARE
-    last_result: dict | None = None
-
-    def view(self):
-        return {"session_id": self.session_id, "map_id": self.map_id,
-                "regions": list(self.regions), "channels": list(self.channels),
-                "current": self.current.to_dict(), "last_result": deepcopy(self.last_result)}
+from contracts import Directive, Event, EventKind, Mission, MissionKind, Module, Mode, Phase, State, Status, MissionType, command_event, system_event, identifier
 
 
 class Brain:
@@ -50,6 +23,14 @@ class Brain:
         self.last_result = None
         self.last_command_result = None
         self.now = 0.0
+        self.business_mode = BusinessMode.IDLE
+        self.fault_latched = False
+        self.mission_results = []
+
+    @property
+    def execution(self):
+        owner = self.mapping or self.task
+        return owner.execution if owner else None
 
     @property
     def statuses(self):
@@ -94,7 +75,7 @@ class Brain:
                 "command_result": deepcopy(acknowledgement), "brain_status": self.status()}
 
     def status(self):
-        """Upper-layer observation; task IDs never leak into algorithm directives."""
+        """Upper-layer business observation; spatial work records remain in roboframe."""
         def task_status(task):
             if task is None:
                 return None
@@ -104,6 +85,11 @@ class Brain:
                     "current_target": task.mission.targets[task.cursor]}
         last = deepcopy(self.history[-1]) if self.history else None
         return {"revision": self.directive.revision, "mode": self.directive.mode.value,
+                "business_mode": self.business_mode.value,
+                "mission_state": self.execution.view() if self.execution else None,
+                "suspended_mission": self.suspended.execution.view() if self.suspended else None,
+                "last_mission_result": deepcopy(self.mission_results[-1]) if self.mission_results else None,
+                "fault_latched": self.fault_latched,
                 "phase": self.directive.phase.value, "task": task_status(self.task),
                 "mapping": self.mapping.view() if self.mapping else None,
                 "suspended_task": task_status(self.suspended),
@@ -117,29 +103,44 @@ class Brain:
             raise ValueError("brain requires monotonic finite time")
         self.now = now
 
-    def _issue(self, mode, phase=Phase.NONE, reason=""):
+    def _publish(self, reason=""):
+        """One-way projection: business state is authoritative, wire state is output."""
         self.reason = reason
-        # Paused/faulted algorithms receive no executable mission or hidden checkpoint.
-        item = self.task.current() if self.task and phase != Phase.NONE else None
-        if self.mapping and mode == Mode.MAPPING:
-            item = self.mapping.current
-            self.mapping.phase = phase
-        self.directive = Directive(self.directive.revision + 1, mode, phase, item)
+        execution = self.execution
+        mode = {BusinessMode.RETURN_TO_CHARGE: Mode.RETURNING}.get(self.business_mode)
+        if mode is None:
+            mode = Mode(self.business_mode.value)
+        phase, item = Phase.NONE, None
+        if self.fault_latched:
+            mode = Mode.ERROR
+        elif execution and (execution.lifecycle == Lifecycle.PAUSED or execution.retry_pending):
+            mode = Mode.PAUSED
+        elif execution and execution.lifecycle == Lifecycle.FAILED:
+            mode = Mode.ERROR
+        elif execution:
+            phase, item = execution.action_phase, execution.action
+        self.directive = Directive(self.directive.revision + 1, mode, phase, item, execution.task_id if item else None)
         self.health.begin(self.directive, self.now)
         return self.directive
 
-    def _prepare(self):
-        if self.mapping:
-            phase = Phase.COMMIT if self.mapping.phase == Phase.COMMIT else Phase.PREPARE
-            return self._issue(Mode.MAPPING, phase)
-        mode = {MissionKind.MOW: Mode.WORKING, MissionKind.RETURN_HOME: Mode.RETURNING}[self.task.mission.kind]
-        return self._issue(mode, Phase.PREPARE)
+    def _record_execution(self, result, execution=None, reason=""):
+        execution = execution or self.execution
+        if execution:
+            self.mission_results.append({**execution.view(), "result": result, "reason": reason or None})
+
+    def _fail(self, reason):
+        self.fault_latched = True
+        if self.execution and self.execution.lifecycle not in (Lifecycle.FAILED, Lifecycle.SUCCESS):
+            self.execution.finish(False)
+            self._record_execution("failed", reason=reason)
+        return self._publish(reason)
 
     def _finish(self):
         mission = self.task.mission
         self.history.append({"mission_id": mission.mission_id, "result": "completed"})
         self.task = None
-        return self._issue(Mode.CHARGING if mission.kind == MissionKind.RETURN_HOME else Mode.IDLE)
+        self.business_mode = BusinessMode.CHARGING if mission.kind == MissionKind.RETURN_HOME else BusinessMode.IDLE
+        return self._publish()
 
     def handle(self, message, now):
         self._clock(now)
@@ -166,192 +167,143 @@ class Brain:
         return output or timeout
 
     def _event(self, event):
-        kind, mode = event.kind, self.directive.mode
-        if kind in (EventKind.START_MAPPING, EventKind.SELECT_REGION_START, EventKind.START_EDGE_FOLLOW,
-                    EventKind.TAKE_OVER, EventKind.START_CHANNEL, EventKind.FINISH_CHANNEL,
-                    EventKind.FINISH_MAPPING):
-            return self._mapping_command(event)
-        if kind == EventKind.START:
-            if mode != Mode.IDLE or self.task or self.suspended:
+        kind, mode, execution = event.kind, self.business_mode, self.execution
+        if kind == EventKind.RESET:
+            if not self.fault_latched:
+                raise ValueError("RESET requires a latched fault")
+            self.fault_latched = False
+            if execution and execution.lifecycle == Lifecycle.FAILED:
+                execution.retry_pending = True
+            return self._publish()
+        if kind == EventKind.LOW_BATTERY:
+            if self.fault_latched or mode in (BusinessMode.IDLE, BusinessMode.CHARGING, BusinessMode.RETURN_TO_CHARGE):
+                return None
+            if self.mapping:
+                if execution.action_phase == Phase.COMMIT:
+                    return None
+                if execution.lifecycle != Lifecycle.FAILED:
+                    execution.pause()
+                return self._publish("low battery")
+            if execution.lifecycle != Lifecycle.FAILED:
+                execution.pause()
+            self.suspended = self.task
+            m = self.task.mission
+            base_id = return_id = f"return:{event.event_id}"
+            suffix = 0
+            while return_id in self.used_missions:
+                suffix += 1
+                return_id = f"{base_id}:{suffix}"
+            self.used_missions.add(return_id)
+            self.task = Task(Mission(return_id, MissionKind.RETURN_HOME,
+                                     m.map_id, (m.home_id,), m.home_id))
+            self.business_mode = BusinessMode.RETURN_TO_CHARGE
+            return self._publish()
+        if kind == EventKind.BATTERY_OK:
+            if mode == BusinessMode.CHARGING and not self.fault_latched:
+                self.task, self.suspended = self.suspended, None
+                self.business_mode = BusinessMode.WORKING if self.task else BusinessMode.IDLE
+                return self._publish("charged; explicit RESUME required" if self.task else "")
+            return None
+        if self.fault_latched:
+            raise ValueError("fault is latched; RESET first")
+        if kind in (EventKind.START, EventKind.START_MAPPING):
+            if mode != BusinessMode.IDLE or self.task or self.mapping or self.suspended:
                 raise ValueError("START requires IDLE without a suspended task")
-            if event.mission.mission_id in self.used_missions:
-                raise ValueError("mission_id already used in this session")
-            if self.low_battery and event.mission.kind != MissionKind.RETURN_HOME:
+            returning = kind == EventKind.START and event.mission.kind == MissionKind.RETURN_HOME
+            if self.low_battery and not returning:
                 raise ValueError("battery is low")
-            self.used_missions.add(event.mission.mission_id)
-            self.task = Task(event.mission)
-            return self._prepare()
+            task_id = event.mission.mission_id if kind == EventKind.START else event.event_id.removeprefix("command:")
+            if task_id in self.used_missions:
+                raise ValueError("task ID already used in this session")
+            self.used_missions.add(task_id)
+            if kind == EventKind.START_MAPPING:
+                self.mapping = MappingSession(task_id, event.map_id)
+                self.business_mode = BusinessMode.MAPPING
+            else:
+                self.task = Task(event.mission)
+                self.business_mode = BusinessMode.RETURN_TO_CHARGE if returning else BusinessMode.WORKING
+            return self._publish()
         if kind == EventKind.PAUSE:
-            if mode not in (Mode.MAPPING, Mode.WORKING, Mode.RETURNING):
+            if not execution or execution.lifecycle not in (Lifecycle.PREPARE, Lifecycle.RUNNING):
                 raise ValueError("no active task to pause")
-            if self.directive.phase == Phase.COMMIT:
+            if execution.action_phase == Phase.COMMIT:
                 raise ValueError("map commit must finish before pausing")
-            return self._issue(Mode.PAUSED, reason="user pause")
+            execution.pause()
+            return self._publish("user pause")
         if kind == EventKind.RESUME:
-            if mode != Mode.PAUSED or not (self.task or self.mapping):
+            if not execution:
                 raise ValueError("no paused task to resume")
-            if self.low_battery and (self.mapping or self.task.mission.kind != MissionKind.RETURN_HOME):
+            if self.low_battery and mode != BusinessMode.RETURN_TO_CHARGE:
                 raise ValueError("battery is low")
-            return self._prepare()
+            owner = self.mapping or self.task
+            owner.execution = execution.resume()
+            return self._publish()
         if kind == EventKind.CANCEL:
-            if mode == Mode.ERROR:
-                raise ValueError("fault is latched; RESET first")
-            if self.directive.phase == Phase.COMMIT:
+            if execution and execution.action_phase == Phase.COMMIT and not execution.retry_pending:
                 raise ValueError("map commit must finish before cancelling")
             for task in (self.task, self.suspended):
                 if task:
                     self.history.append({"mission_id": task.mission.mission_id, "result": "cancelled"})
+                    self._record_execution("cancelled", task.execution)
             if self.mapping:
                 self.history.append({"mission_id": self.mapping.session_id, "result": "cancelled"})
-                self.mapping = None
-            self.task = self.suspended = None
-            return self._issue(Mode.IDLE)
-        if kind == EventKind.LOW_BATTERY:
-            if mode in (Mode.IDLE, Mode.ERROR, Mode.CHARGING, Mode.RETURNING):
-                return None
-            if self.mapping:
-                if self.directive.phase == Phase.COMMIT:
-                    return None
-                return self._issue(Mode.PAUSED, reason="low battery")
-            if self.task.mission.kind == MissionKind.MOW:
-                self.suspended = self.task
-                m = self.task.mission
-                self.task = Task(Mission(f"return:{event.event_id}", MissionKind.RETURN_HOME,
-                                         m.map_id, (m.home_id,), m.home_id))
-                return self._prepare()
-            if self.directive.phase == Phase.COMMIT:
-                return None  # Finish atomic map commit; battery latch prevents the next job.
-            return self._issue(Mode.PAUSED, reason="low battery")
-        if kind == EventKind.BATTERY_OK:
-            if mode == Mode.CHARGING:
-                self.task, self.suspended = self.suspended, None
-                return self._issue(Mode.PAUSED if self.task else Mode.IDLE,
-                                   reason="charged; explicit RESUME required" if self.task else "")
-            return None
-        if kind == EventKind.RESET:
-            if mode != Mode.ERROR:
-                raise ValueError("RESET requires ERROR")
-            # Reset only unlatches the fault. Resume runs the readiness barrier again.
-            return self._issue(Mode.PAUSED if self.task or self.mapping else Mode.IDLE)
-        raise ValueError("unsupported event")
-
-
-    def _mapping_manual(self, reason=""):
-        self.mapping.current = WorkItem(MissionType.MANUAL_DRIVE, self.mapping.map_id, None, Control.MANUAL)
-        return self._issue(Mode.MAPPING, Phase.PREPARE, reason)
-
-    def _mapping_command(self, event):
-        kind = event.kind
-        if kind == EventKind.START_MAPPING:
-            if self.directive.mode != Mode.IDLE or self.task or self.mapping or self.suspended:
-                raise ValueError("START_MAPPING requires IDLE")
-            if self.low_battery:
-                raise ValueError("battery is low")
-            session_id = event.event_id.removeprefix("command:")
-            if session_id in self.used_missions:
-                raise ValueError("session_id already used")
-            self.used_missions.add(session_id)
-            self.mapping = MappingSession(session_id, event.map_id,
-                                          WorkItem(MissionType.MANUAL_DRIVE, event.map_id, None, Control.MANUAL))
-            return self._prepare()
-        if not self.mapping or self.directive.mode != Mode.MAPPING or self.directive.phase != Phase.EXECUTE:
+                self._record_execution("cancelled")
+            self.task = self.mapping = self.suspended = None
+            self.business_mode = BusinessMode.IDLE
+            return self._publish()
+        if not self.mapping:
             raise ValueError("mapping command requires an executing mapping session")
-        current = self.mapping.current
-        if kind in (EventKind.SELECT_REGION_START, EventKind.START_CHANNEL):
-            if current.type != MissionType.MANUAL_DRIVE:
-                raise ValueError("finish the current mapping object first")
-            if event.target_id in self.mapping.regions + self.mapping.channels:
-                raise ValueError("mapping object ID already exists")
-            if kind == EventKind.START_CHANNEL:
-                if not self.mapping.regions:
-                    raise ValueError("a channel requires an existing region")
-                self.mapping.current = WorkItem(MissionType.MAP_CHANNEL, self.mapping.map_id,
-                                                target_id=event.target_id, control=Control.MANUAL)
-            else:
-                self.mapping.current = WorkItem(MissionType.MAP_REGION, self.mapping.map_id,
-                                                target_id=event.target_id, control=Control.MANUAL)
-            return self._issue(Mode.MAPPING, Phase.PREPARE)
-        if kind in (EventKind.START_EDGE_FOLLOW, EventKind.TAKE_OVER):
-            expected = Control.MANUAL if kind == EventKind.START_EDGE_FOLLOW else Control.AUTO
-            if current.type != MissionType.MAP_REGION or current.control != expected:
-                raise ValueError("edge control change requires the matching active region control")
-            control = Control.AUTO if expected == Control.MANUAL else Control.MANUAL
-            self.mapping.current = replace(current, control=control)
-            return self._issue(Mode.MAPPING, Phase.PREPARE)
-        if kind == EventKind.FINISH_CHANNEL:
-            if current.type != MissionType.MAP_CHANNEL:
-                raise ValueError("no channel is being recorded")
-            return self._issue(Mode.MAPPING, Phase.COMMIT)
-        if kind == EventKind.FINISH_MAPPING:
-            if current.type != MissionType.MANUAL_DRIVE:
-                raise ValueError("finish the current region or channel before saving the map")
-            if not self.mapping.regions:
-                raise ValueError("cannot save a map without a completed region")
-            self.mapping.current = WorkItem(MissionType.SAVE_MAP, self.mapping.map_id, None, Control.NONE)
-            return self._issue(Mode.MAPPING, Phase.COMMIT)
-        raise ValueError("unsupported mapping command")
-
-    def _mapping_feedback(self, status):
-        current = self.mapping.current
-        if (self.directive.phase == Phase.EXECUTE and current.type == MissionType.MAP_REGION
-                and status.module in (Module.PERCEPTION, Module.MAP_MANAGER)
-                and status.state in (State.RUNNING, State.SUCCEEDED)
-                and status.signal == "REGION_CLOSED"):
-            return self._issue(Mode.MAPPING, Phase.COMMIT)
-        if (self.directive.phase != Phase.COMMIT or status.module != Module.MAP_MANAGER
-                or status.state != State.SUCCEEDED):
-            return None
-        if current.type == MissionType.SAVE_MAP:
-            self.history.append({"mission_id": self.mapping.session_id, "result": "completed",
-                                 "map_id": self.mapping.map_id, "regions": list(self.mapping.regions),
-                                 "channels": list(self.mapping.channels)})
-            self.mapping = None
-            return self._issue(Mode.IDLE)
-        collection = self.mapping.regions if current.type == MissionType.MAP_REGION else self.mapping.channels
-        collection.append(current.target_id)
-        self.mapping.last_result = {"type": current.type.value, "target_id": current.target_id,
-                                    "result": "completed"}
-        if self.low_battery:
-            self.mapping.current = WorkItem(MissionType.MANUAL_DRIVE, self.mapping.map_id, None, Control.MANUAL)
-            self.mapping.phase = Phase.PREPARE
-            return self._issue(Mode.PAUSED, reason="low battery")
-        return self._mapping_manual()
+        self.mapping.command(event)
+        return self._publish()
 
     def _status(self, status):
-        d = self.directive
         if not self.health.accept(status, self.now):
             return None
-        if d.phase == Phase.NONE:
+        execution = self.execution
+        if (self.fault_latched or not execution
+                or execution.lifecycle not in (Lifecycle.PREPARE, Lifecycle.RUNNING)):
             return None
-        if (self.mapping and d.phase == Phase.PREPARE
-                and self.mapping.current.type == MissionType.MAP_CHANNEL
-                and status.module == Module.MAP_MANAGER and status.state == State.REJECTED
-                and status.reason == "CHANNEL_START_OUTSIDE_REGION"):
-            self.mapping.last_result = {"type": "MAP_CHANNEL", "target_id": self.mapping.current.target_id,
-                                        "result": "rejected", "reason": status.reason}
-            return self._mapping_manual(status.reason)
+        if self.mapping and self.mapping.recover_rejection(status):
+            if self.low_battery:
+                execution.pause()
+            return self._publish(status.reason)
         if status.state in (State.FAILED, State.BLOCKED, State.REJECTED):
-            return self._issue(Mode.ERROR, reason=f"{status.module}: {status.reason or status.state}")
-        if d.phase == Phase.PREPARE:
+            return self._fail(f"{status.module}: {status.reason or status.state}")
+        if execution.action_phase == Phase.PREPARE:
             if self.health.ready(self.now):
-                return self._issue(d.mode, Phase.EXECUTE)
+                execution.activate()
+                return self._publish()
             return None
         if self.mapping:
-            return self._mapping_feedback(status)
-        owner = Module.PNC
-        if status.module != owner or status.state != State.SUCCEEDED:
+            if not self.mapping.feedback(status):
+                return None
+            if execution.lifecycle == Lifecycle.SUCCESS:
+                self._record_execution("completed")
+                self.history.append({"mission_id": self.mapping.session_id, "result": "completed",
+                    "map_id": self.mapping.map_id, "regions": list(self.mapping.regions),
+                    "channels": list(self.mapping.channels)})
+                self.mapping = None
+                self.business_mode = BusinessMode.IDLE
+            elif self.low_battery and execution.action_phase != Phase.COMMIT:
+                execution.pause()
+                return self._publish("low battery")
+            return self._publish()
+        if status.state != State.SUCCEEDED:
             return None
+        execution.finish(True)
+        self._record_execution("completed")
         self.task.cursor += 1
         if self.task.cursor == len(self.task.mission.targets):
             return self._finish()
-        return self._prepare()
+        self.task.start_target()
+        return self._publish()
 
     def tick(self, now):
         """Clock input is supplied by the host, including when all modules are silent."""
         self._clock(now)
         expired = self.health.expired(now)
         if expired:
-            return self._issue(Mode.ERROR, reason=f"{expired[0]}: status timeout")
+            return self._fail(f"{expired[0]}: status timeout")
         return None
 
     def view(self):

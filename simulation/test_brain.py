@@ -18,20 +18,20 @@ class BrainTests(unittest.TestCase):
         for module in Module:
             brain.handle(Status(module, revision, 1, now, State.READY), now)
 
-    def test_all_three_ready_before_execution(self):
+    def test_single_runtime_readiness_gates_execution(self):
         brain = self.start()
-        for module in (Module.PERCEPTION, Module.PNC):
-            brain.handle(Status(module, 1, 1, 0, State.READY), 0)
+        brain.handle(Status(Module.ROBOFRAME, 1, 1, 0, State.RUNNING), 0)
         self.assertEqual(brain.directive.phase, Phase.PREPARE)
-        brain.handle(Status(Module.MAP_MANAGER, 1, 1, 0, State.READY), 0)
+        brain.handle(Status(Module.ROBOFRAME, 1, 2, 0, State.READY), 0)
         self.assertEqual(brain.directive.phase, Phase.EXECUTE)
         self.assertEqual(brain.directive.mission.target_id, "region-1")
+        self.assertEqual(set(brain.status()["modules"]), {"roboframe"})
         self.assertNotIn("targets", {field.name for field in fields(WorkItem)})
 
     def test_old_completion_cannot_advance_paused_or_new_work(self):
         brain = self.start()
         self.ready(brain)
-        old = Status(Module.PNC, brain.directive.revision, 2, 0.2, State.SUCCEEDED)
+        old = Status(Module.ROBOFRAME, brain.directive.revision, 2, 0.2, State.SUCCEEDED)
         brain.handle(Event("pause", EventKind.PAUSE), 0.2)
         brain.handle(old, 0.3)
         self.assertEqual(brain.task.cursor, 0)
@@ -40,17 +40,16 @@ class BrainTests(unittest.TestCase):
         brain.handle(old, 0.6)
         self.assertEqual(brain.task.cursor, 0)
 
-    def test_completion_is_counted_once_and_only_by_owner(self):
+    def test_region_completion_is_counted_once(self):
         brain = self.start()
         self.ready(brain)
-        revision = brain.directive.revision
-        brain.handle(Status(Module.MAP_MANAGER, revision, 2, 0.2, State.SUCCEEDED), 0.2)
-        self.assertEqual(brain.task.cursor, 0)
-        done = Status(Module.PNC, revision, 2, 0.2, State.SUCCEEDED)
+        done = Status(Module.ROBOFRAME, brain.directive.revision, 2, 0.2, State.SUCCEEDED)
         brain.handle(done, 0.2)
         brain.handle(done, 0.3)
         self.assertEqual(brain.task.cursor, 1)
         self.assertEqual(brain.directive.mission.target_id, "region-2")
+        self.assertEqual(brain.directive.mission.type.value, "MOW_REGION")
+        self.assertEqual(brain.directive.task_id, "mow-1")
 
     def test_duplicate_and_conflicting_event_ids(self):
         brain = Brain()
@@ -73,26 +72,26 @@ class BrainTests(unittest.TestCase):
 
     def test_status_sequence_stamp_and_revision_reject_old_feedback(self):
         brain = self.start()
-        status = Status(Module.PERCEPTION, 1, 4, 0.2, State.READY)
+        status = Status(Module.ROBOFRAME, 1, 4, 0.2, State.RUNNING)
         brain.handle(status, 0.2)
         for bad in (replace(status, sequence=3, state=State.FAILED),
                     replace(status, revision=0, sequence=5, state=State.FAILED),
                     replace(status, stamp=5, sequence=5, state=State.FAILED),
                     replace(status, stamp=0.1, sequence=5, state=State.FAILED)):
             brain.handle(bad, 0.3)
-        self.assertEqual(brain.statuses[Module.PERCEPTION], status)
+        self.assertEqual(brain.statuses[Module.ROBOFRAME], status)
 
     def test_dead_peer_prevents_execution_when_final_ack_arrives(self):
         brain = self.start()
-        for module in (Module.PERCEPTION, Module.MAP_MANAGER):
+        for module in (Module.ROBOFRAME, Module.ROBOFRAME):
             brain.handle(Status(module, 1, 1, 0, State.READY), 0)
-        brain.handle(Status(Module.PNC, 1, 1, 1.1, State.READY), 1.1)
+        brain.handle(Status(Module.ROBOFRAME, 1, 1, 1.1, State.READY), 1.1)
         self.assertEqual(brain.directive.mode, Mode.ERROR)
 
     def test_fault_is_latched_and_recovery_requires_readiness(self):
         brain = self.start()
         self.ready(brain)
-        brain.handle(Status(Module.PERCEPTION, 2, 2, 0.2, State.FAILED, "lost"), 0.2)
+        brain.handle(Status(Module.ROBOFRAME, 2, 2, 0.2, State.FAILED, "lost"), 0.2)
         self.assertEqual(brain.directive.mode, Mode.ERROR)
         brain.handle(Event("resume", EventKind.RESUME), 0.3)
         self.assertFalse(brain.last_result["accepted"])
@@ -103,7 +102,7 @@ class BrainTests(unittest.TestCase):
 
     def test_stale_message_does_not_extend_deadline(self):
         brain = self.start()
-        brain.handle(Status(Module.PERCEPTION, 1, 1, 0, State.READY), 0.9)
+        brain.handle(Status(Module.ROBOFRAME, 1, 1, 0, State.RUNNING), 0.9)
         brain.tick(1.01)
         self.assertEqual(brain.directive.mode, Mode.ERROR)
         self.assertIn("timeout", brain.reason)
@@ -121,23 +120,26 @@ class BrainTests(unittest.TestCase):
         brain.handle(Event("new", EventKind.START, mowing("new")), 0.4)
         self.assertFalse(brain.last_result["accepted"])
 
-    def test_pnc_recreation_has_no_history_dependency(self):
-        from simulation.doubles import AlgorithmDouble
+    def test_runtime_replanning_preserves_coverage(self):
         sim = Simulation()
         sim.inject(Event("start", EventKind.START, mowing()))
-        sim.until(1.25)
+        sim.until(1.55)
+        recorded = {key: list(value) for key, value in sim.runtime.coverage.items()}
+        self.assertTrue(recorded)
         sim.inject(Event("pause", EventKind.PAUSE))
-        sim.until(1.5)
-        self.assertEqual(sim.brain.task.cursor, 1)
-        sim.modules[Module.PNC] = AlgorithmDouble(Module.PNC)
+        sim.until(1.8)
+        sim.runtime.route = None
         sim.inject(Event("resume", EventKind.RESUME))
-        sim.until(3)
+        self.assertEqual(sim.brain.directive.task_id, "mow-1")
+        sim.until(7)
+        for key, value in recorded.items():
+            self.assertEqual(sim.runtime.coverage[key][:len(value)], value)
+            self.assertEqual(len(sim.runtime.coverage[key]), len(set(sim.runtime.coverage[key])))
         self.assertEqual(sim.brain.directive.mode, Mode.IDLE)
-        self.assertIn({"mission_id": "mow-1", "result": "completed"}, sim.brain.history)
 
     def test_map_identity_and_alignment_gate_current_planning(self):
-        from perception import Observation
-        from pnc import PlanningInput
+        from simulation.observation import Observation
+        from simulation.planning import PlanningInput
         from simulation.doubles import garden
         brain = self.start()
         world = garden()
