@@ -6,6 +6,7 @@
 robotic-mower/
 ├── brain/          完整业务逻辑、任务顺序、业务进度和恢复决策
 ├── contracts.py    JSON 控制协议及最小内部值类型
+├── docs/           当前架构基线、重构记录；history/ 仅存历史方案
 └── simulation/     算法替身、交互脚本、回归和离线回放
 ```
 
@@ -14,6 +15,8 @@ robotic-mower/
 ## roboframe 工作区与集成边界
 
 当前算法组件关系与职责见 [roboframe 架构讨论基线](docs/ROBOFRAME_ARCHITECTURE_BASELINE.md)：保留原有八项主体，新增 CoverageManager、BladeComponent 和充电桩感知，明确 Controller 对桩模式及配套、可选能力和待定边界。Brain 保留业务决策，CoverageManager 管理某次任务的空间进度；这是目标架构讨论基线，不代表能力已经实现或接口已经定稿。
+
+早期 Server V1、算法架构 V2 已归入 [历史方案](docs/history/README.md)，仅供追溯，不作为当前实施依据。
 
 - 实际工作区：WSL2，发行版 `Ubuntu-22.04`，目录 `/home/watermango/work/roboframe`。
 - GitHub 仓库：[PU-UP/roboframe](https://github.com/PU-UP/roboframe)，已核实 origin 为 `https://github.com/PU-UP/roboframe.git`。

@@ -299,7 +299,7 @@ class Brain:
         return self._publish()
 
     def tick(self, now):
-        """Clock input is supplied by the host, including when all modules are silent."""
+        """Clock input is supplied by the host, including when roboframe is silent."""
         self._clock(now)
         expired = self.health.expired(now)
         if expired:

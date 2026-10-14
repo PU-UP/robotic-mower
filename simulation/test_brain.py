@@ -15,8 +15,7 @@ class BrainTests(unittest.TestCase):
 
     def ready(self, brain, now=0.1):
         revision = brain.directive.revision
-        for module in Module:
-            brain.handle(Status(module, revision, 1, now, State.READY), now)
+        brain.handle(Status(Module.ROBOFRAME, revision, 1, now, State.READY), now)
 
     def test_single_runtime_readiness_gates_execution(self):
         brain = self.start()
@@ -81,12 +80,13 @@ class BrainTests(unittest.TestCase):
             brain.handle(bad, 0.3)
         self.assertEqual(brain.statuses[Module.ROBOFRAME], status)
 
-    def test_dead_peer_prevents_execution_when_final_ack_arrives(self):
+    def test_runtime_timeout_is_not_masked_by_late_current_feedback(self):
         brain = self.start()
-        for module in (Module.ROBOFRAME, Module.ROBOFRAME):
-            brain.handle(Status(module, 1, 1, 0, State.READY), 0)
-        brain.handle(Status(Module.ROBOFRAME, 1, 1, 1.1, State.READY), 1.1)
+        self.ready(brain, 0)
+        revision = brain.directive.revision
+        brain.handle(Status(Module.ROBOFRAME, revision, 2, 1.1, State.RUNNING), 1.1)
         self.assertEqual(brain.directive.mode, Mode.ERROR)
+        self.assertIn("timeout", brain.reason)
 
     def test_fault_is_latched_and_recovery_requires_readiness(self):
         brain = self.start()

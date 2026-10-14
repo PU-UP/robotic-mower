@@ -6,7 +6,7 @@
 
 本文记录用户架构图及后续解释，并保存本轮整理的完整关系图与能力职责。当前只讨论架构，不确定算法内部实现、接口字段、TF 记号、队列长度或线程数量。本轮只更新 robotic-mower 文档，不修改代码。
 
-系统职责以 [SYSTEM_DESIGN.md](../SYSTEM_DESIGN.md) 为准；本文是 roboframe 算法侧的当前讨论入口。[算法架构 V2](MOWER_ALGORITHM_ARCHITECTURE_V2.md) 保留为背景分析，其中未确认的建议不自动成为本基线的决策。
+系统职责以 [SYSTEM_DESIGN.md](../SYSTEM_DESIGN.md) 为准；本文是 roboframe 算法侧的当前讨论入口。[历史算法架构 V2](history/MOWER_ALGORITHM_ARCHITECTURE_V2.md) 仅供背景追溯，其中未确认的建议不自动成为本基线的决策。
 
 ## 1. 已明确的架构方向
 
