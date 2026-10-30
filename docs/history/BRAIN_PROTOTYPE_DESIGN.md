@@ -1,6 +1,8 @@
 # Brain 设计：业务状态机与单一 roboframe 边界
 
-状态：2026-10-14。本文描述本仓库的可执行 Python 原型；实际算法工作区尚未接入。目标组件关系以 [roboframe 架构基线](../docs/ROBOFRAME_ARCHITECTURE_BASELINE.md) 为准，原型消息见 [协议](PROTOCOL.md)。
+> 2026-10-30：本文保留已退役 Python 原型的设计讨论；实现、协议与测试已从当前目录移除；单一执行入口、显式恢复及 SSM/Foundation 边界不自动适用于 rlcp。当前调整依据见 [rlcp 基线](../RLCP_BASELINE.md)。
+
+状态：2026-10-14。本文描述当时的可执行 Python 原型；实际算法工作区尚未接入。目标组件关系以 [roboframe 架构基线](../ROBOFRAME_ARCHITECTURE_BASELINE.md) 为准，原型消息见旧协议（随原型实现保存在 Git 提交 `9ba6387` 的 `brain/PROTOCOL.md`）。
 
 ## 职责与状态所有者
 
@@ -61,7 +63,7 @@ Health 的 `current_action` 只描述当前 roboframe 任务反馈是否有效�
 
 ## 系统边界与未完成事项
 
-[SSM / Foundation 边界](../SYSTEM_DESIGN.md)继续适用：SSM 管系统许可和进程生命周期，Brain 管业务准入。本地 RESET_ERROR 不能解除系统禁止，系统许可恢复不自动恢复业务。
+[SSM / Foundation 边界](../../SYSTEM_DESIGN.md)继续适用：SSM 管系统许可和进程生命周期，Brain 管业务准入。本地 RESET_ERROR 不能解除系统禁止，系统许可恢复不自动恢复业务。
 
 SSM 许可、系统强停、Foundation 在桩和地图存在性事实尚未接入。无图建图应由 Brain 在受理前检查有效在桩与地图事实；当前替身在开始后检查固定坐标，仍是已知缺口。未知事实不能被解释为已确认；普通 PAUSE/CANCEL 也不能代替系统强停。
 

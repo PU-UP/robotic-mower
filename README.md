@@ -1,79 +1,38 @@
 # robotic-mower
 
-当前阶段：**Brain 对接单一 roboframe 的业务原型**。使用独立场景验证建图、割草、回充与恢复；实际算法和设备尚未接入。
+机器人软件与算法的架构设计、讨论、实现核对与待办入口，侧重感知、定位、规划控制等算法及其协作，也覆盖相关业务决策。**rlcp 是首款实际落地产品的架构与实现基线；roboframe 是持续维护、升级和讨论的参考架构。** 二者可以相互提供设计依据，不要求 rlcp 完整迁移为 roboframe 或合并为单进程。
 
-```text
-robotic-mower/
-├── brain/          完整业务逻辑、任务顺序、业务进度和恢复决策
-├── contracts.py    JSON 控制协议及最小内部值类型
-├── docs/           当前架构基线、重构记录；history/ 仅存历史方案
-└── simulation/     算法替身、交互脚本、回归和离线回放
-```
+## 三个仓库的分工
 
-系统职责见 [SSM、Brain 与 foundation 的边界](SYSTEM_DESIGN.md)。SSM 是 Brain 的上游，负责系统许可与命令转交；Brain 是业务决策中心。根据 2026-10-12 的架构确认，原先 perception、map_manager、pnc 三个算法进程合并到 roboframe 的单一算法进程，算法侧仍保留各能力职责边界。Brain 职责基本维持，继续管理任务顺序、业务进度、中断与恢复。SSM/foundation/HMI/App 尚未接入原型。
+| 仓库 | 角色 | 内容归属 |
+| --- | --- | --- |
+| 本仓库 | 架构设计、讨论与只读实现核对 | 职责划分、设计取舍、产品差异、TODO 和有明确范围的验收结论 |
+| rlcp | 首款实际产品 | 产品软件与算法、业务逻辑、现有协议、硬件适配、产品测试和发布配置 |
+| roboframe | 参考架构的代码实现与实验 | 框架、组件、编排、示例及对应测试；经验证的经验反馈至架构讨论 |
 
-## roboframe 工作区与集成边界
+rlcp 的现有代码决定“产品现在怎样运行”；参考架构描述“希望如何组织和演进”。某项设计写入参考文档，不意味着产品已经采纳。工作边界及验收方式见 [仓库职责与工作约定](docs/REPOSITORY_SCOPE.md)，当前事项统一记录在 [TODO](TODO.md)。
 
-当前算法组件关系与职责见 [roboframe 架构讨论基线](docs/ROBOFRAME_ARCHITECTURE_BASELINE.md)：保留原有八项主体，新增 CoverageManager、BladeComponent 和充电桩感知，明确 Controller 对桩模式及配套、可选能力和待定边界。Brain 保留业务决策，CoverageManager 管理某次任务的空间进度；这是目标架构讨论基线，不代表能力已经实现或接口已经定稿。
+## 阅读入口
 
-早期 Server V1、算法架构 V2 已归入 [历史方案](docs/history/README.md)，仅供追溯，不作为当前实施依据。
+- [TODO](TODO.md)：待讨论、核对、落地和验收事项；记录不自动触发代码修改。
+- [rlcp 首款产品基线](docs/RLCP_BASELINE.md)：实际代码组织、职责范围及与早期原型的差异。
+- [roboframe 参考架构](docs/ROBOFRAME_ARCHITECTURE_BASELINE.md)：组件能力、数据流、运行属性与待讨论边界，继续维护。
+- [系统职责参考](SYSTEM_DESIGN.md)：业务决策、系统许可与执行事实的分工，继续讨论，不直接等同 rlcp 当前模块。
+- [历史设计与实验记录](docs/history/README.md)：V1/V2、已退役 Brain 原型设计及 roboframe 实验。
 
-- 实际工作区：WSL2，发行版 `Ubuntu-22.04`，目录 `/home/watermango/work/roboframe`。
-- GitHub 仓库：[PU-UP/roboframe](https://github.com/PU-UP/roboframe)，已核实 origin 为 `https://github.com/PU-UP/roboframe.git`。
-- roboframe 的产品进程为 `robot_runtime`；算法组件由 integration 装配、接线和编排，组件内部负责算法计算。组件可以独立开发，部署在同一进程内不等于单线程，也不要求一个职责目录对应一个组件。
-- Brain 继续负责业务决策；roboframe 承接当前目标所需的算法执行。内部 BT 协调当前任务执行，生产接口接入仍待明确，本次进程合并不把 Brain 的业务决策职责转移给算法组件。
-- 本仓库继续用于 Brain 协议、业务状态机与交互仿真。旧三个产品目录已撤去，有用数据模型移至 `simulation/world.py`、`observation.py`、`planning.py`；单一 `RoboframeDouble` 提供统一任务反馈，当前尚未连接实际 roboframe。
+## 工作区与代码关系
 
-2026-10-14 已在实际 roboframe 中跑通 Intel Lab 全量数据、建图 BT，以及 Planner → Controller → 速度输出的导航 demo，见 [导航设计与验收](docs/ROBOFRAME_NAVIGATION_DEMO.md)；首轮记录见 [建图 BT 验收](docs/ROBOFRAME_BT_INTEGRATION.md)。速度没有设备消费者，本仓库 Brain、实机运动与割草能力尚未接通。
+实际代码位于 WSL2 `Ubuntu-22.04`：
 
-## 当前原型接口
+- rlcp：`/home/watermango/work/rlcp`，主要软件在 `slamMower/`。
+- roboframe：`/home/watermango/work/roboframe`。
 
-Brain 不再等待三个算法来源或调度区域内沿边/覆盖步骤。区域顺序、低电抢占和恢复在 Brain；当前任务内部执行、空间进度与设备确认在 roboframe。重构范围和验收见 [计划记录](docs/BRAIN_ROBOFRAME_REFACTOR.md)。
+目前只维护两个外部仓库的存在、角色和工作区路径，按议题需要只读查看代码。当前不添加子模块、不指定或同步版本、不修改外部代码、不提供统一构建或发布入口。记录查看时的提交号仅用于说明证据，不构成版本锁定。
 
-```mermaid
-flowchart TB
-    U[上游：目标接SSM，当前由仿真提供] -->|command / event| B[Brain：业务状态机]
-    B -->|command_result / brain_status| U
-    B -->|当前目标、稳定任务标识与执行意图| R[roboframe：单一算法进程]
-    R -->|统一任务反馈| B
-    R <-->|观测、执行请求与设备事实| W[当前为仿真环境；目标接Foundation]
-```
+## 原型退役
 
-下发示例：
+2026-10-30 移除旧 `brain/`、`simulation/`、`contracts.py` 和 SimPy 依赖，以及只服务于该原型的协议、场景和测试说明。它们不再定义产品行为；旧版可从 Git 提交 `9ba6387` 取回。保留 [Brain 设计讨论](docs/history/BRAIN_PROTOTYPE_DESIGN.md) 中的职责与状态归属分析，作为后续业务决策设计的材料。
 
-```json
-{
-  "revision": 4,
-  "task_id": "work-1",
-  "mode": "WORKING",
-  "phase": "EXECUTE",
-  "mission": {"type": "MOW_REGION", "map_id": "garden", "target_id": "region-2", "control": "AUTO"}
-}
-```
+今后的业务代码归实际代码仓库；业务决策模块的职责和名称重新设计，不在本仓库重建另一套 Brain。今后需要的仿真、回放和测试由对应实现仓库承载；这里记录验收要求、实现核对和已有验证结果，不自动执行产品或设备测试。
 
-完整定义见 [Brain 输入输出协议](brain/PROTOCOL.md)。完整目标顺序只留在 Brain；原任务标识随恢复请求继续传给 roboframe，使空间作业记录可以关联续用。原型协议已替换旧三来源反馈，尚不是生产协议定稿。
-
-运行（项目根目录，Python 3.11+）：
-
-```powershell
-.\.venv\Scripts\python.exe -m simulation
-.\.venv\Scripts\python.exe -m simulation --script simulation/scenarios/cover_regions.json
-.\.venv\Scripts\python.exe -m unittest discover -s simulation -p "test_*.py" -v
-```
-
-新环境先安装依赖：
-
-```powershell
-python -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -r requirements.txt
-```
-
-打开 [交互回放](simulation/output/report.html) 查看单一 roboframe 交互图、本步 JSON、模块基本状态和验收结果。仿真支持自动算法反馈和脚本指定反馈，格式见 [仿真说明](simulation/README.md)。
-
-后续你提供一项业务，就增加一份独立的交互脚本，填入输入与期望输出，再迭代 brain；目前不提前规定全部业务策略。
-
-仿真用固定线段和明确的刀盘反馈验证有效作业记录，用独立设备事实验证充电确认；这些是内存替身，不是实际 CoverageManager、刀盘控制或对桩算法。空间记录不会写入环境地图，新任务不继承旧覆盖。无业务/覆盖掉电恢复、可靠地图提交或实机运动保证。
-
-首个业务已接入：[整次建图流程](brain/MAPPING.md)，包含从充电站后退1.5米、遥控回归通道、两区域与普通通道、接管恢复、闭合和连通校验后保存。运行 python -m simulation，在总报告中切换建图、作业、回充和异常场景。
-
-仓库使用 main 分支。源码、协议文档和仿真场景纳入版本管理；.venv、缓存和 simulation/output 生成文件不提交。克隆后按上述步骤运行即可重新生成回放页面。
+旧本地产物与删除前副本存放在忽略提交的 `.local-archive/legacy-prototype/`，不是项目运行入口；本地存在不代表新克隆可获得。

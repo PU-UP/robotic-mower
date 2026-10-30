@@ -1,5 +1,7 @@
 # Brain 对接单一 roboframe 的重构计划
 
+> 本文是 2026-10-14 已完成的 Python 原型重构记录，不是 rlcp 的未来实施计划。旧实现已于 2026-10-30 退役，以下“当前”“保留”等均指当时状态，代码可在 Git 提交 `9ba6387` 中追溯。2026-10-30 起的定位见 [rlcp 基线](RLCP_BASELINE.md)。
+
 本轮重构 Python Brain 原型、仿真与说明文档；以 [架构基线](ROBOFRAME_ARCHITECTURE_BASELINE.md) 为职责依据。真实 roboframe 的 C++ 算法、Foundation 设备接口及部署不在本轮范围。
 
 ## 保留与迁移
@@ -20,7 +22,7 @@
 
 ## 基线与恢复
 
-修改前 59 项 Python 测试通过。原工作区（含未提交文件和 diff）已备份至 `simulation/output/before-brain-roboframe-20261014-094206.zip`，该目录不纳入版本管理。优先迁移已有状态机和校验，不整体丢弃原 diff。
+修改前 59 项 Python 测试通过。原工作区（含未提交文件和 diff）已备份至 `.local-archive/legacy-prototype/simulation/output/before-brain-roboframe-20261014-094206.zip`（原位于 `simulation/output/`，2026-10-30 随本地产物迁移），该目录不纳入版本管理。优先迁移已有状态机和校验，不整体丢弃原 diff。
 
 ## 限制
 
@@ -45,7 +47,7 @@
 ## 工作区残留复审（2026-10-14）
 
 - 旧三个产品包源码已删除，但本地目录因被 Git 忽略的 `__pycache__` 仍存在。确认目录仅含旧字节码后，清除实际目录；Git 不跟踪这些缓存，其他旧工作区可能也需单独核查。
-- 原未跟踪的 Server V1 与已跟踪的算法 V2 一并移入 [history](history/README.md)，保留正文并标明历史性质；同步当前入口和相对链接，纳入版本管理。
+- 原未跟踪的 Server V1 与已跟踪的算法 V2 当时一并移入 history，保留正文并标明历史性质；2026-10-30 继续保留这些旧稿用于架构讨论追溯，见 [历史索引](history/README.md)。
 - 清除迁移中途生成的旧失败日志 `simulation/output/refactor-tests.txt`，保留原工作区备份与当前仿真报告。
 - 重新核对源码导入、协议、场景及文档引用。旧模块名称仅留在迁移说明、历史稿和拒绝旧协议来源的测试中；`simulation/world.py`、`observation.py`、`planning.py` 是有调用方的测试模型，不是旧产品服务。
 - 修正一处测试迁移遗漏：删除向同一 roboframe 重复发送 READY 的旧多模块循环，将原“等待最后一个模块”测试改为验证当前版本迟到反馈不能掩盖单一 roboframe 的超时。

@@ -79,7 +79,7 @@ stdio 新增 NAVIGATE、NAV_CANCEL、NAV_STATUS、GET_PATH，输出 NAV、PATH �
 - 全量 13,631 帧建图回归通过，地图与上一版逐字节一致。
 - 910 帧真实数据参考地图上的导航 demo 通过：468 个路径点，约 46.5 m；本次产生 25 条速度事件，取消与 TF 停流后均为零速度。
 
-本地结果副本：[规划路径图](../simulation/output/roboframe-navigation/path.svg)、[统计与路径](../simulation/output/roboframe-navigation/summary.json)、[实际输出事件](../simulation/output/roboframe-navigation/navigation-events.jsonl)。
+本地结果副本于 2026-10-30 移至仓库根目录下的 `.local-archive/legacy-prototype/simulation/output/roboframe-navigation/`：`path.svg` 为规划路径图，`summary.json` 为统计与路径，`navigation-events.jsonl` 为实际输出事件。此路径仅在原本地工作区存在，不是仓库文件链接。
 这些是忽略提交的生成产物，克隆本仓库不会带上它们；WSL 原始产物当时位于 `build-nav/navigation-demo/`，2026-10-30 复核时该目录已不存在。
 
 ## 验证边界

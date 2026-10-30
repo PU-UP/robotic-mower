@@ -1,6 +1,8 @@
-# 系统职责：SSM 管系统许可，Brain 管业务决策
+# 系统职责参考架构：SSM、Brain 与 Foundation
 
-状态：2026-09-21 建立系统职责基线，2026-10-14 同步单一 roboframe 对接原型。SSM、foundation、HMI、App/IoT 及 roboframe 尚未接入当前 Python 原型；本文不表示这些接口已经实现。现有实现差异见末节。
+2026-10-30 定位：本文是持续维护的系统职责参考架构，来源于入职前讨论，后续可根据产品经验升级。SSM、Brain、Foundation 是参考设计中的逻辑角色，不直接等同 rlcp 现有目录或进程；首款产品现状见 [rlcp 基线](docs/RLCP_BASELINE.md)。
+
+原 Python 原型已退役，不能作为当前实现或接口已落地的证据。以下职责为参考方案，产品采纳或调整时需明确实现位置与验证依据。
 
 ## 1. 设计结论
 
@@ -14,7 +16,7 @@ HMI 与 App 是否包含彼此、App 中间是否经过 IoT，不改变 Brain �
 
 当前进一步确认的目标职责：Brain 管业务任务、区域顺序、暂停、回充和恢复，CoverageManager 独立管理某次割草任务的空间进度；BT 协调执行，BladeComponent 解释刀盘执行反馈，充电桩感知向 Controller 的对桩模式提供实时观测，不新增独立对桩组件。长期充电站资产归地图管理，实际接触、在桩与充电事实来自设备侧。设备反馈能力尚待核实，不能把刀盘命令发出或视觉对准当作实际运行、在桩或充电已确认；这些目标能力尚未接入原型，详见架构讨论基线。
 
-roboframe 实际工作区为 WSL2 `Ubuntu-22.04` 中的 `/home/watermango/work/roboframe`，仓库为 [PU-UP/roboframe](https://github.com/PU-UP/roboframe)。本仓库保留 Brain 原型与逻辑接口；工作区关系见 [README](README.md#roboframe-工作区与集成边界)。
+roboframe 实际工作区为 WSL2 `Ubuntu-22.04` 中的 `/home/watermango/work/roboframe`，仓库为 [PU-UP/roboframe](https://github.com/PU-UP/roboframe)。本仓库维护设计讨论与产品对照；工作区关系见 [README](README.md#工作区与代码关系)。
 
 ## 2. 逻辑信息流
 
@@ -85,16 +87,10 @@ SSM恢复系统许可不自动恢复任务；Brain本地RESET_ERROR也不能恢�
 
 Brain内部的Health/Event Manager仅负责业务相关事实与能力，不承担整机看门狗。SSM可以订阅同样的模块健康，但仅执行系统策略；跨层故障使用可关联的来源和原因，不靠两个模块分别猜测根因。
 
-## 6. 对当前原型的影响
+## 6. 产品应用与设计演进
 
-| 当前实现 | 与目标边界的差异 | 后续调整 |
-| --- | --- | --- |
-| Brain只对接单一RoboframeDouble，旧算法模型迁入simulation | Python边界已重构，实际roboframe尚未接入 | 用真实产品入口替换替身；同进程组件不具有独立进程故障隔离 |
-| 上层直接调用Brain.receive | 尚无SSM入口、系统许可或中断协议 | 用适配层接SSM；保留Brain可独立测试，先定义许可/中断语义 |
-| START_MAPPING先建立UNDOCK，仿真地图模块检查是否靠近固定站位 | 把业务准入放到了下层；且坐标邻近不等于传感器在桩 | 增加有效在桩与地图事实输入；Brain在受理前判断；保留下层执行校验 |
-| 新地图ID与已存在地图ID检查 | 不等于系统是否无可用地图 | roboframe地图管理提供有作用域、有版本的地图存在性事实 |
-| Brain模块心跳超时、故障锁存 | 目前同时像业务监控和系统故障处理 | 保留业务反馈超时；进程生命周期与整机许可归SSM，明确两种复位权限 |
-| 低电/电量恢复来自外部event | 未约定foundation/SSM事实来源 | 明确来源、有效性和转发语义；低电后的业务选择仍归Brain |
-| Mode、Mission生命周期与阶段 | 分层本身成立 | 增加系统许可门控和业务准入，不把SSM状态混进业务Mode枚举 |
+首款产品以 [rlcp 实际架构](docs/RLCP_BASELINE.md) 为基线。监控、硬件抽象、业务决策在现有实现中的职责需要逐项对应，不因参考图存在 SSM/Foundation 就新增同名服务或改变部署。
 
-本轮已更新Brain原型、协议、仿真与回放，未实现SSM/Foundation接入。上述系统许可、事实输入与启动前准入仍是下一阶段的明确缺口；当前替身验收不能代替实机验证。
+旧原型暴露的系统许可、事实来源、业务准入、停止确认和恢复语义仍是设计问题，但其 JSON 协议、固定建图阶段及显式续作规则不再作为产品约束。相关职责分析保存在 [Brain 历史设计](docs/history/BRAIN_PROTOTYPE_DESIGN.md)。
+
+后续更新本参考架构时，区分产品已验证行为与待采纳设计，并记录选择理由。业务与算法代码、设备适配和可执行验证归实际代码仓库；本仓库维护跨模块结论。

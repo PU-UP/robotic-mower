@@ -1,18 +1,16 @@
-# roboframe 算法组件架构：当前讨论基线
+# roboframe 算法组件参考架构
 
-日期：2026-10-12。状态：讨论基线，尚未定稿，不代表组件或接口已经实现。
+2026-10-30 定位：本文继续作为可维护、可升级的参考架构，而非仅供封存的旧稿。设计起点为 2026-10-12 的讨论；组件和数据边界仍可根据产品实践修订，不代表对应实现已经完成。
 
-本轮确认新增 CoverageManager、BladeComponent 和充电桩感知三项独立能力；对桩执行归 Controller 的对桩模式，不新增独立 DockingComponent。以下将已确认的职责方向与尚待核实的设备反馈、实现细节分开记录。
+首款落地产品采用 [rlcp 架构基线](RLCP_BASELINE.md)，在现有代码上渐进重构；参考架构不强制 rlcp 采用单进程部署、完整组件清单或相同接口。以下“已明确”描述参考设计内部的职责方向，不表示公司产品已采纳。
 
-本文记录用户架构图及后续解释，并保存本轮整理的完整关系图与能力职责。当前只讨论架构，不确定算法内部实现、接口字段、TF 记号、队列长度或线程数量。本轮只更新 robotic-mower 文档，不修改代码。
-
-系统职责以 [SYSTEM_DESIGN.md](../SYSTEM_DESIGN.md) 为准；本文是 roboframe 算法侧的当前讨论入口。[历史算法架构 V2](history/MOWER_ALGORITHM_ARCHITECTURE_V2.md) 仅供背景追溯，其中未确认的建议不自动成为本基线的决策。
+本参考设计保留 CoverageManager、BladeComponent 和充电桩感知能力；对桩执行归 Controller 的对桩模式。系统职责见 [系统参考架构](../SYSTEM_DESIGN.md)，早期方案及实验见 [历史记录](history/README.md)。
 
 ## 1. 已明确的架构方向
 
-- Brain 已存在，业务职责基本维持：管理业务模式、任务顺序、进度、中断与恢复。
-- 原先 perception、map_manager、pnc 三个算法进程合并到 roboframe 单一算法进程 `robot_runtime`；旧目录已在 Python 原型重构中撤去，有用数据模型迁入 simulation；不限定未来组件数量。
-- roboframe 实际工作区为 WSL2 `Ubuntu-22.04` 中的 `/home/watermango/work/roboframe`，仓库为 [PU-UP/roboframe](https://github.com/PU-UP/roboframe)。本仓库尚未完成与它的实际接入。
+- Brain 表示业务决策角色：管理业务模式、任务顺序、进度、中断与恢复。实际代码归属及名称按产品设计确定。
+- 参考部署采用 roboframe 的单一算法进程 `robot_runtime`，内部保留能力边界；不限定未来组件数量，也不要求 rlcp 按此合并进程。
+- roboframe 实际工作区为 WSL2 `Ubuntu-22.04` 中的 `/home/watermango/work/roboframe`，仓库为 [PU-UP/roboframe](https://github.com/PU-UP/roboframe)。实际实现与测试在该代码仓库维护；本仓库不提供运行时接入层。
 - 沿用 roboframe 的 interface → integration → component 分层。integration 负责产品装配、接线、跨组件对时与编排；算法计算及融合归 component。组件之间通过公开数据与 integration 接线，不直接依赖彼此实现。
 - Odom 表示必须具备的局部运动估计能力，可以由 DR、VIO、LIO 或组合实现提供；实际组件可以叫 `LIOComponent` 等，不要求统一命名或增加一层 Odom 包装。
 - Controller 可以直接消费实时轮速等底盘反馈，这条输入不表示 Controller 重新做 DR。
@@ -259,12 +257,10 @@ Controller 持续运行表示控制执行链持续获得调度，处理反馈、
 | Smoother / Recovery | 作为可选能力保留，不预先要求独立实现 |
 | SDK、产品接口与运行细节 | 类型、字段、频率、线程、队列和调度策略按真实组件需求设计；当前框架示例不作为算法能力已实现的证据 |
 
-## 7. 与当前原型的关系
+## 7. 产品对照、验证与后续讨论
 
-2026-10-14 后续已在实际 roboframe 的 demo_robot 中接入建图 BT、简单 Planner/Controller 和导航 BT，详见 [导航设计与验收](ROBOFRAME_NAVIGATION_DEMO.md)。BT 执行机制位于 orchestration，contract 仅公开任务与数据语义。以下“未接入”指本仓库 Brain 与目标割草系统的实际对接；导航 demo 仅发布无人消费的速度，不代表实机闭环或割草能力已经实现。
+2026-10-14 的独立 roboframe 建图及导航实验见 [导航验收](ROBOFRAME_NAVIGATION_DEMO.md) 和 [建图 BT 验收](ROBOFRAME_BT_INTEGRATION.md)。这些是历史版本记录：速度输出没有设备消费者，不能证明实机闭环，也不能代表当前 roboframe 或 rlcp 已具备图中全部能力。
 
-2026-10-14 已将 Python Brain 和仿真改为单一 roboframe 任务入口，撤去旧三个算法产品目录；Brain 每次下发整个区域割草目标，并在恢复时保留原任务标识。地图、观测和路径数据模型迁入 simulation，替身验证内存作业记录及刀盘/充电确认边界。实际组件、BT、Foundation 和生产接口均未接入；本图仍是目标能力基线，不应把替身当作组件实现。重构范围见 [计划记录](BRAIN_ROBOFRAME_REFACTOR.md)。
+旧 Python Brain 与 simulation 已从当前仓库移除。其职责探索保存在 [Brain 历史设计](history/BRAIN_PROTOTYPE_DESIGN.md)，迁移与验收过程见 [原型历史记录](BRAIN_ROBOFRAME_REFACTOR.md)。不再以替身、固定轨迹或旧状态机作为组件实现与产品验收依据。
 
-CoverageManager、BladeComponent、充电桩感知与 Controller 对桩模式均为目标组件职责，真实组件尚未实现。Python 替身已区分 Brain 的区域级进度与算法侧的任务空间记录，不再要求未完成区域全部重做；记录格式、持久化及真实剩余范围规划仍待设计。
-
-实际接入、性能、地图一致性及运动闭环均未由本次原型重构验证。后续确定某项边界时更新本基线，明确其从“待定”变为“已确认”，再开展相应接口与实现设计。
+后续持续维护本文的能力边界与数据归属。产品经验可以修订参考设计；某项能力是否已经实现、是否被 rlcp 采纳，需关联实际代码版本与验证证据。参考设计与首款产品允许存在有理由的差异。
