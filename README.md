@@ -24,6 +24,8 @@ robotic-mower/
 - Brain 继续负责业务决策；roboframe 承接当前目标所需的算法执行。内部 BT 协调当前任务执行，生产接口接入仍待明确，本次进程合并不把 Brain 的业务决策职责转移给算法组件。
 - 本仓库继续用于 Brain 协议、业务状态机与交互仿真。旧三个产品目录已撤去，有用数据模型移至 `simulation/world.py`、`observation.py`、`planning.py`；单一 `RoboframeDouble` 提供统一任务反馈，当前尚未连接实际 roboframe。
 
+2026-10-14 已在实际 roboframe 中跑通 Intel Lab 全量数据、建图 BT，以及 Planner → Controller → 速度输出的导航 demo，见 [导航设计与验收](docs/ROBOFRAME_NAVIGATION_DEMO.md)；首轮记录见 [建图 BT 验收](docs/ROBOFRAME_BT_INTEGRATION.md)。速度没有设备消费者，本仓库 Brain、实机运动与割草能力尚未接通。
+
 ## 当前原型接口
 
 Brain 不再等待三个算法来源或调度区域内沿边/覆盖步骤。区域顺序、低电抢占和恢复在 Brain；当前任务内部执行、空间进度与设备确认在 roboframe。重构范围和验收见 [计划记录](docs/BRAIN_ROBOFRAME_REFACTOR.md)。

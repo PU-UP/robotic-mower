@@ -261,6 +261,8 @@ Controller 持续运行表示控制执行链持续获得调度，处理反馈、
 
 ## 7. 与当前原型的关系
 
+2026-10-14 后续已在实际 roboframe 的 demo_robot 中接入建图 BT、简单 Planner/Controller 和导航 BT，详见 [导航设计与验收](ROBOFRAME_NAVIGATION_DEMO.md)。BT 执行机制位于 orchestration，contract 仅公开任务与数据语义。以下“未接入”指本仓库 Brain 与目标割草系统的实际对接；导航 demo 仅发布无人消费的速度，不代表实机闭环或割草能力已经实现。
+
 2026-10-14 已将 Python Brain 和仿真改为单一 roboframe 任务入口，撤去旧三个算法产品目录；Brain 每次下发整个区域割草目标，并在恢复时保留原任务标识。地图、观测和路径数据模型迁入 simulation，替身验证内存作业记录及刀盘/充电确认边界。实际组件、BT、Foundation 和生产接口均未接入；本图仍是目标能力基线，不应把替身当作组件实现。重构范围见 [计划记录](BRAIN_ROBOFRAME_REFACTOR.md)。
 
 CoverageManager、BladeComponent、充电桩感知与 Controller 对桩模式均为目标组件职责，真实组件尚未实现。Python 替身已区分 Brain 的区域级进度与算法侧的任务空间记录，不再要求未完成区域全部重做；记录格式、持久化及真实剩余范围规划仍待设计。
