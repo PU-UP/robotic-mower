@@ -14,6 +14,7 @@ rlcp 的现有代码决定“产品现在怎样运行”；参考架构描述“
 
 ## 阅读入口
 
+- [RLCP 算法模块化交互架构图](sites/rlcp-architecture/dist/index.html)：本地浏览器打开，无需联网；点击模块与连线查看职责、输入输出和待确认边界，含 IPC / 单进程候选视图。后续仅维护本地版本，打开方式见 [网页说明](sites/rlcp-architecture/README.md)。
 - [TODO](TODO.md)：待讨论、核对、落地和验收事项；记录不自动触发代码修改。
 - [rlcp 首款产品基线](docs/RLCP_BASELINE.md)：实际代码组织、职责范围及与早期原型的差异。
 - [roboframe 参考架构](docs/ROBOFRAME_ARCHITECTURE_BASELINE.md)：组件能力、数据流、运行属性与待讨论边界，继续维护。

@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="RLCP 算法模块化设计评审：交互式职责图、模块接口、执行流程与部署选择。">
+  <title>RLCP · 算法模块化架构</title>
+  <link rel="stylesheet" href="style.css">
+  <script defer src="model.js"></script><script defer src="app.js"></script>
+</head>
+<body>
+  <header class="topbar"><a class="brand" href="#"><span class="brand-mark">R</span> RLCP <span class="brand-sub">/ 架构设计工作台</span></a><span class="draft"><i></i> 讨论稿 · v0.2</span><a class="top-link" href="#questions">待确认问题 ↗</a></header>
+  <main>
+    <section class="intro"><div><p class="eyebrow">ALGORITHM ARCHITECTURE / 2026.10.30</p><h1>算法模块化架构</h1><p class="lead">看清职责边界，沿着数据与指令理解模块如何协作。</p></div><div class="intro-note"><strong>先明确逻辑，再选择部署</strong><span>基于手绘设计整理 · 模块 ≠ 进程<br>Percep 可作为 SLAM 库；IPC 是初期通信方式。</span></div></section>
+    <section class="workbench" aria-label="交互式架构图">
+      <div class="viewbar"><div class="segmented" id="views" aria-label="部署视图"><button data-view="logical" aria-pressed="true">逻辑职责</button><button data-view="ipc" aria-pressed="false">初期 IPC</button><button data-view="single" aria-pressed="false">单进程候选</button></div><button class="quiet" id="reset">重置视图 ↺</button></div>
+      <div class="view-note" id="view-note">连线表示逻辑交互，不规定进程、线程或类的划分。点击模块或连线查看职责与接口。</div>
+      <div class="workspace"><div class="diagram-pane">
+        <div class="topicbar" aria-label="架构专题"><button data-topic="main" aria-pressed="true">系统总览</button><button data-topic="mapping" aria-pressed="false">定位与地图</button><button data-topic="orchestration" aria-pressed="false">调度与异常</button></div><p id="topic-note" class="topic-note"></p>
+        <div class="graph-toolbar"><div id="filters" class="filters" aria-label="连线类型"><button data-filter="main" aria-pressed="true">主链路</button><button data-filter="data" aria-pressed="false">数据</button><button data-filter="command" aria-pressed="false">指令</button><button data-filter="feedback" aria-pressed="false">反馈</button><button data-filter="all" aria-pressed="false">全部</button></div><label class="suggestions"><input id="suggestions" type="checkbox" checked> 显示补充建议</label></div>
+        <div class="graph-scroll" tabindex="0" aria-label="架构画布，可横向滚动"><div class="graph" id="graph"><svg id="connections" viewBox="0 0 1480 960" aria-label="模块间有向接口"></svg><div id="nodes"></div></div></div>
+        <div class="legend"><span><i class="line data"></i> 数据流</span><span><i class="line command"></i> 指令流</span><span><i class="line feedback"></i> 反馈 / 事件</span><span><i class="line proposed"></i> 补充建议</span><span class="legend-note">箭头指向接收方 · TF 为公共接口 · 角色不等于进程</span></div>
+        <div class="walkthrough"><div class="walk-head"><span class="eyebrow">沿链路查看</span><select id="scenario" aria-label="选择交互流程"><option value="navigate">规划与执行</option><option value="recover">阻塞与恢复</option><option value="mapping">环境到地图</option></select><button class="quiet" id="exit-walk" hidden>退出演示</button></div><div class="walk-body"><span id="step-counter">—</span><div><strong id="step-title">用一条真实协作链路检查职责</strong><p id="step-text">按步骤高亮接口。演示的是建议交互顺序，不是机器人实时状态。</p></div><button id="previous" aria-label="上一步" disabled>←</button><button id="next">开始演示 →</button></div></div>
+      </div><aside id="inspector" class="inspector" tabindex="-1" aria-label="职责与接口详情" aria-live="polite"></aside></div>
+    </section>
+    <section class="principles"><div class="section-heading"><p class="eyebrow">MAPPING RESPONSIBILITIES</p><h2>把感知累计、地图融合与文件保存分开</h2><p>下面展开 Nav Map 的内部地图层；它们是职责分解，不额外规定进程或类。</p></div><div class="map-breakdown">
+      <article><span class="small-tag">Percep · 已确认方向</span><h3>只用 odom 累计观测</h3><svg viewBox="0 0 340 150" role="img" aria-label="两张部分重叠的 Submap；仅表示重叠关系，不规定大小或比例"><rect x="24" y="22" width="180" height="95" rx="6" fill="#e0edf7" stroke="#83acca"/><rect x="132" y="40" width="180" height="95" rx="6" fill="#cce8df" fill-opacity=".7" stroke="#66a68f"/><text x="50" y="62">Submap n</text><text x="202" y="90">Submap n+1</text><text x="142" y="70" class="overlap-label">重叠</text></svg><p>local BEV OCC 是实时观测；Submap 是多帧累计产物。两路分别交给 Nav Map。重叠比例、切换和完成条件待定。</p><button class="quiet" data-module="percep">查看 Percep 职责 ↗</button></article>
+      <article><span class="small-tag">Nav Map · 多层地图</span><h3>生成可消费的地图</h3><div class="map-layer dynamic"><strong>局部动态层 → local costmap</strong><span>BEV 转换 · 机器人位于窗口正中心</span></div><div class="map-layer obstacle"><strong>障碍物地图 → 可保存</strong><span>Submap 堆叠 · 接收 SLAM 历史 map pose</span></div><div class="map-layer boundary-layer"><strong>建图边界轨迹 → 保存后不可改</strong><span>内容与 map 坐标均冻结 · SLAM 优化不得修改</span></div><p>向 Global / Local planner 直接提供 costmap。SLAM 优化后，建议按 Submap 标识替换贡献或重建区域，避免旧位置与重叠区重复叠加。</p><button class="quiet" data-module="navmap">查看 Nav Map 职责 ↗</button></article>
+      <article><span class="small-tag">Map Server · 仅文件</span><h3>保存两侧配套资产</h3><div class="file-pair"><span>SLAM 文件</span><span>Nav Map 文件</span></div><p>提供保存、文件位置、读取和删除操作；不融合地图、不提供运行时 costmap，也不修改地图内容。</p><div class="boundary"><strong>配套机制 · 建议</strong>两侧文件关联同一清单 / 提交版本。完整性检查和部分失败处理需定义；建图业务 ID 归属待讨论。</div><button class="quiet" data-module="map">查看 Map Server 职责 ↗</button></article>
+    </div></section>
+    <section class="principles"><div class="section-heading"><p class="eyebrow">NON-BLOCKING ORCHESTRATION</p><h2>等待结果是状态，不是阻塞调用</h2><p>Decision 作为 client 非阻塞调度已确认。以下请求协议是设计建议，尚未选定消息格式或通信库。</p></div><ol class="async-flow"><li><strong>发出请求</strong><span>关联请求标识，立即返回事件处理。</span></li><li><strong>服务受理</strong><span>返回接受 / 拒绝；耗时工作由 server 执行。</span></li><li><strong>持续处理事件</strong><span>底板、堵转、算法异常、取消与超时仍可进入。</span></li><li><strong>异步结果驱动迁移</strong><span>匹配请求与当前状态，隔离迟到结果。</span></li></ol><div class="principle-grid"><article><span class="small-tag">已确认</span><h3>异常事实与处置策略分工</h3><p>异常检测强依赖 SLAM / Percep，输出打滑、遮挡、LiDAR 算法侧异常。底板堵转走硬件事件输入；Decision 决定相应策略。</p></article><article><span class="small-tag proposal">建议</span><h3>历史位姿需要独立协议</h3><p>当前 TF 不替代历史 Submap 的 map pose。建议按 Submap ID 与优化批次关联内容和位姿；PoseGraph 内部结构仍待讨论。</p></article><article><span class="small-tag proposal">建议</span><h3>取消、恢复与运动控制权</h3><p>停止确认通过异步反馈完成。Local planner 与 Recovery 的控制权必须互斥；超时和异常洪泛不能堵住 Decision。</p></article></div></section>
+    <section class="contracts"><div class="section-heading"><p class="eyebrow">INTERACTION CONTRACTS</p><h2>接口清单</h2><p id="table-caption">与上方连线筛选同步。点击一行查看接口含义与待定义内容。</p></div><div class="table-scroll"><table><thead><tr><th>发送方 → 接收方</th><th>载荷 / 意图</th><th>类型</th><th>依据</th><th>查看</th></tr></thead><tbody id="interface-rows"></tbody></table></div></section>
+    <section id="questions" class="questions"><div class="section-heading"><p class="eyebrow">OPEN DESIGN QUESTIONS</p><h2>下一轮评审，先回答这些</h2><p>图中的候选职责与补充接口尚未成为产品要求。这里与仓库 TODO 的 T-001、T-002 议题关联。</p></div><div id="question-list"></div></section>
+    <footer><div><strong>RLCP / 架构讨论稿</strong><p>来源：用户手绘草图、本轮分工确认，以及本仓库 RLCP_BASELINE / REPOSITORY_SCOPE。<br>roboframe 仅作演进参考；未核对本轮产品代码、未验证设备行为。此页不覆盖完整整机安全与硬件设计。</p></div><button class="quiet" id="print">打印 / 保存 PDF ↗</button></footer>
+  </main>
+</body></html>
