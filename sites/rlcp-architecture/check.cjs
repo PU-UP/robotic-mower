@@ -1,6 +1,11 @@
 const assert = require('node:assert/strict');
 const path = require('node:path');
-const { modules, edges, scenarios, topics, processes } = require('./dist/model.js');
+const fs = require('node:fs');
+const { pathToFileURL } = require('node:url');
+const buildHtml = require('./build.cjs');
+const standalone = fs.readFileSync(path.join(__dirname, 'dist/index.html'), 'utf8').replace(/\r\n/g, '\n');
+assert.equal(standalone, buildHtml(), 'Run node build.cjs to update the standalone file');
+const { modules, edges, scenarios, topics, processes } = require('./src/model.js');
 const moduleIds = new Set(modules.map(m => m.id));
 assert.equal(moduleIds.size, modules.length);
 assert.equal(new Set(edges.map(e => e.id)).size, edges.length);
@@ -59,85 +64,104 @@ console.log(`Model: ${modules.length} modules, ${edges.length} interfaces, ${Obj
 if (process.argv[2]) (async () => {
   const { chromium } = require(process.argv[2]);
   const browser = await chromium.launch({ channel: 'msedge', headless: true });
+  const tempDir = fs.mkdtempSync(path.join(require('node:os').tmpdir(), 'rlcp-standalone-'));
+  const standalonePath = path.join(tempDir, 'index.html');
+  fs.writeFileSync(standalonePath, standalone);
+  fs.mkdirSync(path.resolve(__dirname, '../../.local-archive'), { recursive: true });
   try {
-    const page = await browser.newPage({ viewport: { width: 1600, height: 1100 }, reducedMotion: 'reduce' });
-    const errors = [];
-    const networkRequests = [];
-    page.on('pageerror', e => errors.push(e.message));
-    page.on('request', request => { if (/^https?:/.test(request.url())) networkRequests.push(request.url()); });
-    await page.goto(`file:///${path.resolve(__dirname, 'dist/index.html').replaceAll('\\', '/')}`);
-    assert.equal(await page.locator('.node').count(), modules.length);
-    await page.locator('#reset').click();
-    await page.screenshot({ path: path.resolve(__dirname, '../../.local-archive/rlcp-architecture-desktop.png'), fullPage: true });
-    for (const m of modules) {
-      await page.locator(`#nodes [data-module="${m.id}"]`).click();
-      assert.equal(await page.locator('#inspector h2').textContent(), m.name);
-    }
-    await page.locator('[data-filter="all"]').click();
-    assert.equal(await page.locator('.edge').count(), edges.length);
-    await page.locator('#suggestions').uncheck();
-    assert.equal(await page.locator('.edge.suggested').count(), 0);
-    await page.locator('#suggestions').check();
-    for (const [id, topic] of Object.entries(topics)) {
-      await page.locator(`[data-topic="${id}"]`).click();
-      assert.equal(await page.locator('.edge').count(), topic.edges.length);
-      await page.locator('.graph').screenshot({ path: path.resolve(__dirname, `../../.local-archive/rlcp-architecture-${id}.png`) });
-    }
-    await page.locator('[data-filter="all"]').click();
-    await page.locator('.edge[data-edge="global-state"]').focus();
-    await page.keyboard.press('Enter');
-    assert.match(await page.locator('#inspector').textContent(), /用户确认/);
-    assert.equal(await page.locator(':focus').getAttribute('data-edge'), 'global-state', 'Keyboard focus lost on selection');
-    for (const filter of ['data', 'command', 'feedback']) {
-      await page.locator(`[data-filter="${filter}"]`).click();
-      assert.equal(await page.locator('.edge').count(), edges.filter(e => e.type === filter).length);
-    }
-    for (const view of ['ipc', 'single', 'logical']) {
-      await page.locator(`[data-view="${view}"]`).click();
-      assert.equal(await page.locator(`[data-view="${view}"]`).getAttribute('aria-pressed'), 'true');
-      if (view === 'ipc') {
-        assert.equal(await page.locator('.process-card').count(), 3);
-        for (const process of processes) for (const id of process.members) {
-          assert.equal(await page.locator(`#nodes [data-module="${id}"] small`).textContent(), process.name);
-          assert(await page.locator(`#nodes [data-module="${id}"]`).evaluate((el, className) => el.classList.contains(className), `process-${process.id}`));
+    for (const variant of ['source', 'standalone']) {
+      const url = pathToFileURL(variant === 'source' ? path.join(__dirname, 'src/index.html') : standalonePath).href;
+      const page = await browser.newPage({ viewport: { width: 1600, height: 1100 }, reducedMotion: 'reduce' });
+      const errors = [];
+      const networkRequests = [];
+      page.on('pageerror', e => errors.push(e.message));
+      page.on('request', request => { if (/^https?:/.test(request.url()) || variant === 'standalone' && request.url() !== url) networkRequests.push(request.url()); });
+      await page.goto(url);
+      assert.equal(await page.locator('.node').count(), modules.length);
+      if (variant === 'standalone') {
+        assert.equal(await page.locator('main > section').count(), 1);
+        assert.equal(await page.locator('.principles,.contracts,.questions,footer,.intro,.top-link').count(), 0);
+        assert.equal(await page.locator('script[src],link[href]').count(), 0);
+      } else assert.equal(await page.locator('#question-list .question').count(), require('./src/model.js').questions.length);
+      await page.locator('#reset').click();
+      await page.screenshot({ path: path.resolve(__dirname, `../../.local-archive/rlcp-architecture-${variant}-desktop.png`), fullPage: true });
+      for (const m of modules) {
+        await page.locator(`#nodes [data-module="${m.id}"]`).click();
+        assert.equal(await page.locator('#inspector h2').textContent(), m.name);
+      }
+      await page.locator('[data-filter="all"]').click();
+      assert.equal(await page.locator('.edge').count(), edges.length);
+      await page.locator('#suggestions').uncheck();
+      assert.equal(await page.locator('.edge.suggested').count(), 0);
+      await page.locator('#suggestions').check();
+      for (const [id, topic] of Object.entries(topics)) {
+        await page.locator(`[data-topic="${id}"]`).click();
+        assert.equal(await page.locator('.edge').count(), topic.edges.length);
+        await page.locator('.graph').screenshot({ path: path.resolve(__dirname, `../../.local-archive/rlcp-architecture-${variant}-${id}.png`) });
+      }
+      await page.locator('[data-filter="all"]').click();
+      await page.locator('.edge[data-edge="global-state"]').focus();
+      await page.keyboard.press('Enter');
+      assert.match(await page.locator('#inspector').textContent(), /用户确认/);
+      assert.equal(await page.locator(':focus').getAttribute('data-edge'), 'global-state', 'Keyboard focus lost on selection');
+      for (const filter of ['data', 'command', 'feedback']) {
+        await page.locator(`[data-filter="${filter}"]`).click();
+        assert.equal(await page.locator('.edge').count(), edges.filter(e => e.type === filter).length);
+      }
+      for (const view of ['ipc', 'single', 'logical']) {
+        await page.locator(`[data-view="${view}"]`).click();
+        assert.equal(await page.locator(`[data-view="${view}"]`).getAttribute('aria-pressed'), 'true');
+        if (view === 'ipc') {
+          assert.equal(await page.locator('.process-card').count(), 3);
+          for (const process of processes) for (const id of process.members) {
+            assert.equal(await page.locator(`#nodes [data-module="${id}"] small`).textContent(), process.name);
+            assert(await page.locator(`#nodes [data-module="${id}"]`).evaluate((el, className) => el.classList.contains(className), `process-${process.id}`));
+          }
+          await page.locator('[data-topic="main"]').click();
+          await page.locator('.graph').screenshot({path:path.resolve(__dirname, `../../.local-archive/rlcp-architecture-${variant}-ipc.png`)});
         }
-        await page.locator('[data-topic="main"]').click();
-        await page.locator('.graph').screenshot({path:path.resolve(__dirname, '../../.local-archive/rlcp-architecture-ipc.png')});
       }
-    }
-    for (const [key, flow] of Object.entries(scenarios)) {
-      await page.locator('#scenario').selectOption(key);
-      for (let i = 0; i < flow.steps.length; i++) {
-        await page.locator('#next').click();
-        assert.equal(await page.locator('#step-counter').textContent(), `${i + 1}/${flow.steps.length}`);
-        assert.equal(await page.locator('.edge.active').getAttribute('data-edge'), flow.steps[i][0]);
+      for (const [key, flow] of Object.entries(scenarios)) {
+        await page.locator('#scenario').selectOption(key);
+        for (let i = 0; i < flow.steps.length; i++) {
+          await page.locator('#next').click();
+          assert.equal(await page.locator('#step-counter').textContent(), `${i + 1}/${flow.steps.length}`);
+          assert.equal(await page.locator('.edge.active').getAttribute('data-edge'), flow.steps[i][0]);
+        }
+        await page.locator('#previous').click();
+        assert.equal(await page.locator('#step-counter').textContent(), `${flow.steps.length - 1}/${flow.steps.length}`);
+        await page.locator('#exit-walk').click();
       }
-      await page.locator('#previous').click();
-      assert.equal(await page.locator('#step-counter').textContent(), `${flow.steps.length - 1}/${flow.steps.length}`);
-      await page.locator('#exit-walk').click();
+      if (variant === 'source') {
+        await page.locator('.map-breakdown [data-module="navmap"]').click();
+        assert.equal(await page.locator('#inspector h2').textContent(), 'Nav Map');
+        assert(await page.locator('#inspector h2').evaluate(el => {
+          const rect = el.getBoundingClientRect();
+          return rect.top >= 0 && rect.bottom <= window.innerHeight;
+        }), 'Detail shortcut does not bring module details into view');
+        assert.equal(await page.locator(':focus').getAttribute('id'), 'inspector');
+        await page.locator('[data-filter="all"]').click();
+        await page.locator('#interface-rows [data-edge="tf-global"]').click();
+        assert.match(await page.locator('#inspector .subtitle').textContent(), /Global planner/);
+        assert(await page.locator('#inspector h2').evaluate(el => {
+          const rect = el.getBoundingClientRect();
+          return rect.top >= 0 && rect.bottom <= window.innerHeight;
+        }), 'Interface shortcut does not bring details into view');
+      }
+      await page.locator('#reset').click();
+      await page.setViewportSize({ width: 390, height: 844 });
+      assert(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), 'Page overflows mobile viewport');
+      await page.locator('#nodes [data-module="motion"]').click();
+      assert.equal(await page.locator('#inspector h2').textContent(), 'Motion');
+      await page.screenshot({ path: path.resolve(__dirname, `../../.local-archive/rlcp-architecture-${variant}-mobile.png`), fullPage: true });
+      assert.deepEqual(errors, []);
+      assert.deepEqual(networkRequests, [], 'Offline page unexpectedly uses network resources');
+      console.log(`Browser (${variant}): module details, keyboard input, filters, deployment views, all flows, mobile viewport and offline access passed.`);
+      await page.close();
     }
-    await page.locator('.map-breakdown [data-module="navmap"]').click();
-    assert.equal(await page.locator('#inspector h2').textContent(), 'Nav Map');
-    assert(await page.locator('#inspector h2').evaluate(el => {
-      const rect = el.getBoundingClientRect();
-      return rect.top >= 0 && rect.bottom <= window.innerHeight;
-    }), 'Detail shortcut does not bring module details into view');
-    assert.equal(await page.locator(':focus').getAttribute('id'), 'inspector');
-    await page.locator('[data-filter="all"]').click();
-    await page.locator('#interface-rows [data-edge="tf-global"]').click();
-    assert.match(await page.locator('#inspector .subtitle').textContent(), /Global planner/);
-    assert(await page.locator('#inspector h2').evaluate(el => {
-      const rect = el.getBoundingClientRect();
-      return rect.top >= 0 && rect.bottom <= window.innerHeight;
-    }), 'Interface shortcut does not bring details into view');
-    await page.locator('#reset').click();
-    await page.setViewportSize({ width: 390, height: 844 });
-    assert(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), 'Page overflows mobile viewport');
-    await page.locator('#nodes [data-module="motion"]').click();
-    assert.equal(await page.locator('#inspector h2').textContent(), 'Motion');
-    await page.screenshot({ path: path.resolve(__dirname, '../../.local-archive/rlcp-architecture-mobile.png'), fullPage: true });
-    assert.deepEqual(errors, []);
-    assert.deepEqual(networkRequests, [], 'Offline page unexpectedly uses network resources');
-    console.log('Browser: module details, detail shortcuts, edge keyboard input, filters, deployment views, all flow steps, mobile viewport and offline access passed.');
-  } finally { await browser.close(); }
+  } finally {
+    await browser.close();
+    fs.unlinkSync(standalonePath);
+    fs.rmdirSync(tempDir);
+  }
 })().catch(error => { console.error(error); process.exitCode = 1; });
