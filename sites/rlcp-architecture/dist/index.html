@@ -5,10 +5,34 @@
   <meta name="description" content="RLCP 算法模块化设计评审：交互式职责图、模块接口、执行流程与部署选择。">
   <title>RLCP · 算法模块化架构</title>
   <style>
-:root{--ink:#1d3445;--muted:#637a88;--paper:#f4f7fa;--line:#dce5ec;--blue:#286fa4;--orange:#b36a24;--green:#258473;--purple:#7a6b9a;--white:#fff}*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--paper);color:var(--ink);font-family:'Segoe UI','Microsoft YaHei',sans-serif;font-size:14px;line-height:1.65}button,select,input{font:inherit}button,select{cursor:pointer}button{color:inherit;border:1px solid var(--line);background:white;border-radius:7px;padding:7px 13px}button:hover{border-color:#8da9bc;background:#f0f6fa}button:disabled{opacity:.4;cursor:default}a{color:inherit;text-decoration:none}button:focus-visible,a:focus-visible,select:focus-visible,[tabindex]:focus-visible,input:focus-visible{outline:3px solid #238bce;outline-offset:3px}.topbar{height:72px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;padding:0 3.5%;gap:30px}.brand{display:flex;align-items:center;gap:12px;font-weight:750;font-size:20px;letter-spacing:1px}.brand-mark{display:grid;place-items:center;background:var(--ink);color:white;width:34px;height:34px;border-radius:10px;font-family:Consolas,monospace;font-size:22px}.brand-sub{color:var(--muted);font-weight:400;font-size:13px;letter-spacing:0}.draft{margin-left:auto;font-size:12px;color:#786434;background:#faf4e6;padding:5px 12px;border:1px solid #ebdfbd;border-radius:30px}.draft i{display:inline-block;width:6px;height:6px;border-radius:50%;background:#b99a55;margin-right:7px}.top-link{font-size:12px;color:var(--muted)}main{max-width:1860px;margin:auto;padding:42px 3.5% 0}.intro{display:flex;justify-content:space-between;gap:30px;align-items:center;margin-bottom:30px}.eyebrow{font:11px/1.6 Consolas,'Courier New',monospace;letter-spacing:1.6px;color:var(--muted);margin:0 0 8px}h1{font-size:34px;letter-spacing:-1px;line-height:1.3;margin:0 0 12px;font-weight:650}h2{font-size:22px;line-height:1.5;margin:0}h3{font-size:17px;margin:8px 0}p{margin:0}.lead{font-size:15px;color:var(--muted)}.intro-note{border-left:2px solid #9eb8c9;padding-left:20px;max-width:400px;font-size:12px}.intro-note strong{display:block;margin-bottom:6px;font-size:14px}.intro-note span{color:var(--muted)}.workbench{background:white;border:1px solid #ccdce7;border-radius:14px;box-shadow:0 10px 30px #24465e06;overflow:hidden}.viewbar{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--line);gap:12px}.segmented{display:flex;background:#eef3f7;padding:4px;border-radius:9px;gap:4px}.segmented button{background:transparent;border-color:transparent;padding:7px 19px;font-size:13px}.segmented button[aria-pressed=true]{background:#fff;border-color:#d9e3eb;box-shadow:0 2px 4px #24465e09;color:var(--blue);font-weight:650}.quiet{border:0;background:transparent;color:var(--muted);font-size:12px;padding:6px 9px}.view-note{font-size:12px;color:#527083;background:#f6f9fc;padding:10px 24px;border-bottom:1px solid var(--line);min-height:40px}.workspace{display:grid;grid-template-columns:minmax(0,1fr) 320px}.diagram-pane{min-width:0}.graph-toolbar{display:flex;align-items:center;justify-content:space-between;padding:15px 20px;gap:15px}.filters{display:flex;gap:5px}.filters button{font-size:12px;padding:4px 10px;border-color:transparent;color:var(--muted)}.filters button[aria-pressed=true]{background:#eaf2f8;color:var(--blue);font-weight:650}.suggestions{display:flex;gap:6px;align-items:center;font-size:12px;color:var(--muted);white-space:nowrap}input{accent-color:var(--blue)}.graph-scroll{overflow:auto;background-color:#fbfdff;background-image:radial-gradient(#d5e2ec 1px,transparent 1px);background-size:18px 18px;border-block:1px solid #eaf0f5}.graph{position:relative;min-width:1180px;width:100%;aspect-ratio:1480/960}.graph svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}.node{position:absolute;left:calc(var(--x)/1480 * 100%);top:calc(var(--y)/960 * 100%);width:calc(180/1480 * 100%);height:calc(84/960 * 100%);border:1px solid #cbdbe7;border-left:3px solid var(--node-color);border-radius:8px;background:#fff;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;padding:6px 9px;text-align:left;box-shadow:0 3px 9px #24465e06;transition:opacity .15s,border-color .15s}.node strong{font-family:'Bahnschrift','Segoe UI',sans-serif;font-size:14px;line-height:1.35;font-weight:600;white-space:nowrap}.node span{font-size:10px;color:var(--muted);margin-top:3px;white-space:nowrap}.node.external{background:#edf2f6;border-color:#cfdde6;--node-color:#8c9eaa}.node.business{--node-color:#7c7696}.node.control{--node-color:var(--orange)}.node.sense{--node-color:var(--blue)}.node.map{--node-color:var(--green)}.node.plan{--node-color:#4782a9}.node.act{--node-color:#506480}.node.selected{outline:2px solid var(--blue);outline-offset:3px;background:#f0f7fc}.node.dim{opacity:.28}.edge path.route{fill:none;stroke-width:1.8;stroke:var(--edge-color);opacity:.68}.edge text{font-size:10px;fill:var(--edge-color);paint-order:stroke;stroke:#fbfdff;stroke-width:5px;stroke-linejoin:round;text-anchor:middle;pointer-events:none}.edge .hit{fill:none;stroke:transparent;stroke-width:14;cursor:pointer}.edge.suggested .route{stroke-dasharray:5 5}.edge.dim{opacity:.12}.edge.active .route,.edge:hover .route{stroke-width:3;opacity:1}.edge.active text,.edge:hover text{font-weight:700}.edge:focus-visible{outline:none}.edge:focus-visible .route{stroke-width:4;opacity:1}.layer-label{font:10px Consolas,monospace;letter-spacing:1px;fill:#8fa5b4}.deployment-outline{fill:#eff6fc55;stroke:#a8c3d6;stroke-width:1.3;stroke-dasharray:7 5}.deployment-label{font-size:11px;fill:#527b95}.library-outline{fill:#edf4fa80;stroke:#8cb7d2;stroke-dasharray:4 4}.legend{display:flex;gap:16px;padding:12px 20px;flex-wrap:wrap;color:var(--muted);font-size:11px;align-items:center}.legend span{display:flex;align-items:center;gap:6px}.line{display:inline-block;width:23px;border-top:2px solid}.line.data{color:var(--blue)}.line.command{color:var(--orange)}.line.feedback{color:var(--green)}.line.proposed{border-top:2px dashed #8c9eaa}.legend-note{margin-left:auto;font-size:10px}.inspector{border-left:1px solid var(--line);padding:23px 23px 18px;background:#fff;max-height:1100px;overflow:auto}.inspector .eyebrow{font-size:10px}.inspector h2{font-family:'Bahnschrift','Segoe UI','Microsoft YaHei',sans-serif;font-size:25px;line-height:1.25;margin:10px 0 5px;overflow-wrap:anywhere}.inspector .subtitle{color:var(--muted);margin-bottom:18px;font-size:13px}.small-tag{font-size:10px;color:#277561;background:#eaf6f0;border:1px solid #d6e9df;padding:3px 7px;border-radius:4px;display:inline-block}.small-tag.proposal{color:#97702e;background:#fbf5e9;border-color:#e9e0ce}.summary{font-size:13px;line-height:1.9;margin:18px 0}.detail-label{font-size:11px;font-weight:650;color:var(--muted);margin:22px 0 9px;letter-spacing:.4px}.parts{list-style:none;margin:0;padding:0}.parts li{padding:10px 0;border-bottom:1px solid #edf1f4}.parts strong{font-size:13px;display:block}.parts p{font-size:12px;line-height:1.7;color:var(--muted);margin-top:3px}.ownership{font-size:12px;line-height:1.8}.boundary{font-size:12px;background:#f6f8fa;border-left:2px solid #aabeca;padding:12px;margin-top:17px;line-height:1.8}.boundary strong{display:block;margin-bottom:4px}.port-list{display:grid;gap:5px}.port-list button{text-align:left;font-size:11px;padding:7px 9px;background:#f9fbfc}.port-list small{color:var(--muted);display:block}.walkthrough{padding:16px 20px 21px;border-top:1px solid var(--line);background:#f8fbfd}.walk-head{display:flex;gap:14px;align-items:center;margin-bottom:13px}.walk-head .eyebrow{margin:0}.walk-head select{border:1px solid var(--line);border-radius:6px;padding:3px 8px;color:var(--ink);background:white;font-size:12px}.walk-head .quiet{margin-left:auto}.walk-body{display:flex;align-items:center;gap:12px}.walk-body>div{flex:1}.walk-body strong{font-size:13px}.walk-body p{font-size:12px;color:var(--muted);margin-top:4px;line-height:1.6}.walk-body button{white-space:nowrap;font-size:12px}#step-counter{font:17px Consolas,monospace;color:var(--blue);min-width:48px}.section-heading{margin-bottom:20px}.section-heading>p:last-child:not(.eyebrow){color:var(--muted);font-size:12px;margin-top:8px}.principles,.contracts,.questions{margin-top:40px}.principle-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}.principle-grid article{border-top:2px solid #8fafa8;background:white;padding:23px;border-radius:2px 2px 10px 10px}.principle-grid article:nth-child(2){border-color:#c1a27b}.principle-grid article:nth-child(3){border-color:#8aa9c0}.principle-grid p{color:var(--muted);font-size:13px;line-height:1.9}.table-scroll{overflow:auto;border:1px solid var(--line);border-radius:9px}table{width:100%;border-collapse:collapse;background:white;font-size:12px;text-align:left}th{font-weight:600;color:var(--muted);background:#eef3f7;padding:13px 18px;white-space:nowrap}td{border-top:1px solid #eaf0f4;padding:10px 18px}td:first-child{font-weight:600}td:last-child{width:60px}tr:hover td{background:#f4f9fc}.type-dot{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:6px}.question{display:grid;grid-template-columns:105px 240px 1fr;gap:18px;align-items:start;padding:20px 0;border-top:1px solid var(--line)}.question .status{font-size:11px;color:#957038}.question h3{margin:0;font-size:14px}.question p{font-size:13px;color:var(--muted);line-height:1.9}footer{margin-top:40px;border-top:1px solid var(--line);padding:25px 0 35px;display:flex;align-items:start;justify-content:space-between;gap:30px}footer strong{font-size:12px}footer p{font-size:11px;color:var(--muted);margin-top:7px;line-height:1.9}footer button{white-space:nowrap}@media(min-width:1700px){.workspace{grid-template-columns:minmax(0,1fr) 350px}.inspector{padding:25px 28px}}@media(max-width:1100px){main{padding:28px 20px 0}.workspace{grid-template-columns:minmax(0,1fr)}.inspector{border-left:0;border-top:1px solid var(--line);max-height:none;display:block}.inspector .parts{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}.port-list{grid-template-columns:repeat(2,1fr)}.graph{min-width:1180px}.question{grid-template-columns:85px 190px 1fr}.intro-note{max-width:330px}}@media(max-width:650px){.topbar{height:60px;padding:0 16px;gap:10px}.brand-sub,.top-link{display:none}.brand{font-size:18px}.draft{font-size:10px}.intro{display:block;margin-bottom:22px}.intro-note{margin-top:20px;max-width:none}h1{font-size:28px}.lead{font-size:13px}main{padding:25px 12px 0}.viewbar{padding:10px;align-items:start}.segmented{gap:0;flex:1}.segmented button{padding:7px 9px;font-size:11px}.viewbar>.quiet{font-size:0}.viewbar>.quiet:after{content:'↺';font-size:20px}.view-note{padding:10px 14px}.graph-toolbar{padding:12px;flex-wrap:wrap;gap:8px}.legend{gap:10px;padding:12px}.legend-note{margin-left:0}.walkthrough{padding:15px 12px}.walk-body{flex-wrap:wrap}.walk-body>div{flex-basis:75%}.walk-body button{margin-left:auto}.walk-body button+button{margin-left:0}.inspector{padding:20px}.inspector .parts,.port-list,.principle-grid{grid-template-columns:1fr}.question{grid-template-columns:1fr;gap:6px;padding:18px 0}.principles,.contracts,.questions{margin-top:30px}td,th{padding:10px;min-width:100px}td:first-child{min-width:215px}footer{display:block}footer button{margin-top:15px}}@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important}}@media print{body{background:white}.topbar,.viewbar,.graph-toolbar,.walkthrough,#print,.port-list{display:none}main{padding:0;max-width:none}.workspace{display:block}.graph{min-width:0}.graph-scroll{overflow:visible}.inspector{border-top:1px solid #ddd;max-height:none}.workbench{overflow:visible;box-shadow:none}.node{padding:3px}.node strong{font-size:10px}.node span{font-size:8px}.principle-grid{gap:8px}.principle-grid article{padding:10px}.question{grid-template-columns:75px 180px 1fr}section,article,tr{break-inside:avoid}h2{break-after:avoid}footer{margin-top:15px}.table-scroll{overflow:visible}.edge.dim,.node.dim{opacity:1}.intro-note{font-size:10px}}
+:root{--ink:#1d3445;--muted:#506775;--paper:#f4f7fa;--line:#dce5ec;--blue:#286fa4;--orange:#b36a24;--green:#258473;--purple:#7a6b9a;--white:#fff}*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--paper);color:var(--ink);font-family:'Segoe UI','Microsoft YaHei',sans-serif;font-size:14px;line-height:1.65}button,select,input{font:inherit}button,select{cursor:pointer}button{color:inherit;border:1px solid var(--line);background:white;border-radius:7px;padding:7px 13px}button:hover{border-color:#8da9bc;background:#f0f6fa}button:disabled{opacity:.4;cursor:default}a{color:inherit;text-decoration:none}button:focus-visible,a:focus-visible,select:focus-visible,[tabindex]:focus-visible,input:focus-visible{outline:3px solid #238bce;outline-offset:3px}.topbar{height:60px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;padding:0 3.5%;gap:30px}.brand{display:flex;align-items:center;gap:12px;font-weight:750;font-size:20px;letter-spacing:1px}.brand-mark{display:grid;place-items:center;background:var(--ink);color:white;width:34px;height:34px;border-radius:10px;font-family:Consolas,monospace;font-size:22px}.brand-sub{color:var(--muted);font-weight:400;font-size:13px;letter-spacing:0}.draft{margin-left:auto;font-size:12px;color:#786434;background:#faf4e6;padding:5px 12px;border:1px solid #ebdfbd;border-radius:30px}.draft i{display:inline-block;width:6px;height:6px;border-radius:50%;background:#b99a55;margin-right:7px}.top-link{font-size:12px;color:var(--muted)}main{max-width:1860px;margin:auto;padding:20px 2% 0}.intro{display:flex;justify-content:space-between;gap:30px;align-items:center;margin-bottom:30px}.eyebrow{font:11px/1.6 Consolas,'Courier New',monospace;letter-spacing:1.6px;color:var(--muted);margin:0 0 8px}h1{font-size:34px;letter-spacing:-1px;line-height:1.3;margin:0 0 12px;font-weight:650}h2{font-size:22px;line-height:1.5;margin:0}h3{font-size:17px;margin:8px 0}p{margin:0}.lead{font-size:15px;color:var(--muted)}.intro-note{border-left:2px solid #9eb8c9;padding-left:20px;max-width:400px;font-size:12px}.intro-note strong{display:block;margin-bottom:6px;font-size:14px}.intro-note span{color:var(--muted)}.workbench{background:white;border:1px solid #ccdce7;border-radius:12px;overflow:hidden}.viewbar{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--line);gap:12px}.segmented{display:flex;background:#eef3f7;padding:4px;border-radius:9px;gap:4px}.segmented button{background:transparent;border-color:transparent;padding:7px 19px;font-size:13px}.segmented button[aria-pressed=true]{background:#fff;border-color:#d9e3eb;box-shadow:0 2px 4px #24465e09;color:var(--blue);font-weight:650}.quiet{border:0;background:transparent;color:var(--muted);font-size:12px;padding:6px 9px}.view-note{font-size:12px;color:#527083;background:#f6f9fc;padding:10px 24px;border-bottom:1px solid var(--line);min-height:40px}.workspace{display:grid;grid-template-columns:minmax(0,1fr) 300px}.diagram-pane{min-width:0}.graph-toolbar{display:flex;align-items:center;justify-content:space-between;padding:15px 20px;gap:15px}.filters{display:flex;gap:5px}.filters button{font-size:12px;padding:4px 10px;border-color:transparent;color:var(--muted)}.filters button[aria-pressed=true]{background:#eaf2f8;color:var(--blue);font-weight:650}.suggestions{display:flex;gap:6px;align-items:center;font-size:12px;color:var(--muted);white-space:nowrap}input{accent-color:var(--blue)}.graph-scroll{overflow:auto;background-color:#fbfdff;background-image:radial-gradient(#d5e2ec 1px,transparent 1px);background-size:18px 18px;border-block:1px solid #eaf0f5}.graph{position:relative;min-width:1080px;width:100%;aspect-ratio:1480/var(--graph-height,960)}.graph svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}.node{position:absolute;left:calc(var(--x)/1480 * 100%);top:calc(var(--y)/var(--graph-height,960) * 100%);width:calc(180/1480 * 100%);height:calc(84/var(--graph-height,960) * 100%);border:1px solid #cbdbe7;border-left:1px solid var(--node-color);border-radius:8px;background:#fff;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;padding:6px 9px;text-align:left;box-shadow:0 3px 9px #24465e06;transition:opacity .15s,border-color .15s}.node strong{font-family:'Bahnschrift','Segoe UI',sans-serif;font-size:14px;line-height:1.35;font-weight:600;white-space:nowrap}.node span{font-size:10px;color:var(--muted);margin-top:3px;white-space:nowrap}.node.external{background:#edf2f6;border-color:#cfdde6;--node-color:#8c9eaa}.node.business{--node-color:#7c7696}.node.control{--node-color:var(--orange)}.node.sense{--node-color:var(--blue)}.node.map{--node-color:var(--green)}.node.plan{--node-color:#4782a9}.node.act{--node-color:#506480}.node.selected{outline:2px solid var(--blue);outline-offset:3px;background:#f0f7fc}.node.dim{opacity:.28}.edge path.route{fill:none;stroke-width:1.8;stroke:var(--edge-color);opacity:.68}.edge text{font-size:10px;fill:var(--edge-color);paint-order:stroke;stroke:#fbfdff;stroke-width:5px;stroke-linejoin:round;text-anchor:middle;pointer-events:none}.edge .hit{fill:none;stroke:transparent;stroke-width:14;cursor:pointer}.edge.suggested .route{stroke-dasharray:5 5}.edge.dim{opacity:.12}.edge.active .route,.edge:hover .route{stroke-width:3;opacity:1}.edge.active text,.edge:hover text{font-weight:700}.edge:focus{outline:none}.edge:focus-visible .route{stroke-width:4;opacity:1}.layer-label{font:10px Consolas,monospace;letter-spacing:1px;fill:#8fa5b4}.deployment-outline{fill:#eff6fc55;stroke:#a8c3d6;stroke-width:1.3;stroke-dasharray:7 5}.deployment-label{font-size:11px;fill:#527b95}.library-outline{fill:#edf4fa80;stroke:#8cb7d2;stroke-dasharray:4 4}.legend{display:flex;gap:16px;padding:12px 20px;flex-wrap:wrap;color:var(--muted);font-size:11px;align-items:center}.legend span{display:flex;align-items:center;gap:6px}.line{display:inline-block;width:23px;border-top:2px solid}.line.data{color:var(--blue)}.line.command{color:var(--orange)}.line.feedback{color:var(--green)}.line.proposed{border-top:2px dashed #8c9eaa}.legend-note{margin-left:auto;font-size:10px}.inspector{border-left:1px solid var(--line);padding:23px 23px 18px;background:#fff;max-height:1000px;overflow:auto}.inspector .eyebrow{font-size:10px}.inspector h2{font-family:'Bahnschrift','Segoe UI','Microsoft YaHei',sans-serif;font-size:21px;line-height:1.35;margin:10px 0 5px;overflow-wrap:anywhere}.inspector .subtitle{color:var(--muted);margin-bottom:18px;font-size:13px}.small-tag{font-size:10px;color:#277561;background:#eaf6f0;border:1px solid #d6e9df;padding:3px 7px;border-radius:4px;display:inline-block}.small-tag.proposal{color:#97702e;background:#fbf5e9;border-color:#e9e0ce}.summary{font-size:13px;line-height:1.9;margin:18px 0}.detail-label{font-size:11px;font-weight:650;color:var(--muted);margin:22px 0 9px;letter-spacing:.4px}.parts{list-style:none;margin:0;padding:0}.parts li{padding:10px 0;border-bottom:1px solid #edf1f4}.parts strong{font-size:13px;display:block}.parts p{font-size:12px;line-height:1.7;color:var(--muted);margin-top:3px}.ownership{font-size:12px;line-height:1.8}.boundary{font-size:12px;background:#f6f8fa;border-left:2px solid #aabeca;padding:12px;margin-top:17px;line-height:1.8}.boundary strong{display:block;margin-bottom:4px}.port-list{display:grid;gap:5px}.port-list button{text-align:left;font-size:11px;padding:7px 9px;background:#f9fbfc}.port-list small{color:var(--muted);display:block}.walkthrough{padding:16px 20px 21px;border-top:1px solid var(--line);background:#f8fbfd}.walk-head{display:flex;gap:14px;align-items:center;margin-bottom:13px}.walk-head .eyebrow{margin:0}.walk-head select{border:1px solid var(--line);border-radius:6px;padding:3px 8px;color:var(--ink);background:white;font-size:12px}.walk-head .quiet{margin-left:auto}.walk-body{display:flex;align-items:center;gap:12px}.walk-body>div{flex:1}.walk-body strong{font-size:13px}.walk-body p{font-size:12px;color:var(--muted);margin-top:4px;line-height:1.6}.walk-body button{white-space:nowrap;font-size:12px}#step-counter{font:17px Consolas,monospace;color:var(--blue);min-width:48px}.section-heading{margin-bottom:20px}.section-heading>p:last-child:not(.eyebrow){color:var(--muted);font-size:12px;margin-top:8px}.principles,.contracts,.questions{margin-top:40px}.principle-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}.principle-grid article{border-top:2px solid #8fafa8;background:white;padding:23px;border-radius:2px 2px 10px 10px}.principle-grid article:nth-child(2){border-color:#c1a27b}.principle-grid article:nth-child(3){border-color:#8aa9c0}.principle-grid p{color:var(--muted);font-size:13px;line-height:1.9}.table-scroll{overflow:auto;border:1px solid var(--line);border-radius:9px}table{width:100%;border-collapse:collapse;background:white;font-size:12px;text-align:left}th{font-weight:600;color:var(--muted);background:#eef3f7;padding:13px 18px;white-space:nowrap}td{border-top:1px solid #eaf0f4;padding:10px 18px}td:first-child{font-weight:600}td:last-child{width:60px}tr:hover td{background:#f4f9fc}.type-dot{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:6px}.question{display:grid;grid-template-columns:105px 240px 1fr;gap:18px;align-items:start;padding:20px 0;border-top:1px solid var(--line)}.question .status{font-size:11px;color:#957038}.question h3{margin:0;font-size:14px}.question p{font-size:13px;color:var(--muted);line-height:1.9}footer{margin-top:40px;border-top:1px solid var(--line);padding:25px 0 35px;display:flex;align-items:start;justify-content:space-between;gap:30px}footer strong{font-size:12px}footer p{font-size:11px;color:var(--muted);margin-top:7px;line-height:1.9}footer button{white-space:nowrap}@media(min-width:1700px){.workspace{grid-template-columns:minmax(0,1fr) 350px}.inspector{padding:25px 28px}}@media(max-width:1100px){main{padding:28px 20px 0}.workspace{grid-template-columns:minmax(0,1fr)}.inspector{border-left:0;border-top:1px solid var(--line);max-height:none;display:block}.inspector .parts{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}.port-list{grid-template-columns:repeat(2,1fr)}.graph{min-width:1080px}.question{grid-template-columns:85px 190px 1fr}.intro-note{max-width:330px}}@media(max-width:650px){.topbar{height:60px;padding:0 16px;gap:10px}.brand-sub,.top-link{display:none}.brand{font-size:18px}.draft{font-size:10px}.intro{display:block;margin-bottom:22px}.intro-note{margin-top:20px;max-width:none}h1{font-size:28px}.lead{font-size:13px}main{padding:25px 12px 0}.viewbar{padding:10px;align-items:start}.segmented{gap:0;flex:1}.segmented button{padding:7px 9px;font-size:11px}.viewbar>.quiet{font-size:11px;white-space:nowrap}.view-note{padding:10px 14px}.graph-toolbar{padding:12px;flex-wrap:wrap;gap:8px}.legend{gap:10px;padding:12px}.legend-note{margin-left:0}.walkthrough{padding:15px 12px}.walk-body{flex-wrap:wrap}.walk-body>div{flex-basis:75%}.walk-body button{margin-left:auto}.walk-body button+button{margin-left:0}.inspector{padding:20px}.inspector .parts,.port-list,.principle-grid{grid-template-columns:1fr}.question{grid-template-columns:1fr;gap:6px;padding:18px 0}.principles,.contracts,.questions{margin-top:30px}td,th{padding:10px;min-width:100px}td:first-child{min-width:215px}footer{display:block}footer button{margin-top:15px}}@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important}}@media print{body{background:white}.topbar,.viewbar,.graph-toolbar,.walkthrough,#print,.port-list{display:none}main{padding:0;max-width:none}.workspace{display:block}.graph{min-width:0}.graph-scroll{overflow:visible}.inspector{border-top:1px solid #ddd;max-height:none}.workbench{overflow:visible;box-shadow:none}.node{padding:3px}.node strong{font-size:10px}.node span{font-size:8px}.principle-grid{gap:8px}.principle-grid article{padding:10px}.question{grid-template-columns:75px 180px 1fr}section,article,tr{break-inside:avoid}h2{break-after:avoid}footer{margin-top:15px}.table-scroll{overflow:visible}.edge.dim,.node.dim{opacity:1}.intro-note{font-size:10px}}
 .node small{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#8597a3;font-size:9px;line-height:1.3;margin-top:3px}.public-interface{border-style:dashed;background:#edf6fd}.topicbar{display:flex;gap:8px;padding:15px 20px 5px;flex-wrap:wrap}.topicbar button{font-size:12px;padding:5px 12px}.topicbar button[aria-pressed=true]{color:#fff;background:var(--ink);border-color:var(--ink)}.topic-note{color:var(--muted);font-size:11px;padding:4px 20px 8px}.map-breakdown{display:grid;grid-template-columns:1fr 1.2fr 1fr;gap:20px}.map-breakdown>article{padding:22px;background:white;border:1px solid var(--line);border-radius:10px;min-width:0}.map-breakdown svg{width:100%;max-height:175px;font:13px 'Segoe UI',sans-serif;fill:var(--ink)}.map-breakdown svg .overlap-label{font-size:10px;fill:var(--muted)}.map-breakdown p{font-size:12px;color:var(--muted);line-height:1.9}.map-layer{border-left:3px solid var(--blue);background:#eff6fb;padding:10px 12px;margin:9px 0}.map-layer strong,.map-layer span{display:block;font-size:12px}.map-layer span{color:var(--muted);font-size:11px}.map-layer.obstacle{background:#edf6f1;border-color:var(--green)}.map-layer.boundary-layer{background:#f7f4ee;border-color:#b3a17c}.file-pair{display:flex;gap:12px;margin:22px 0}.file-pair span{padding:15px 12px;border:1px solid var(--line);border-radius:6px;background:#f6f9fb;font:12px Consolas,'Microsoft YaHei',sans-serif}.async-flow{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;counter-reset:step;list-style:none;padding:20px 0;margin:0 0 18px}.async-flow li{border-top:2px solid #8faaba;padding:15px 10px 5px;counter-increment:step}.async-flow li:before{content:'0' counter(step);display:block;color:var(--blue);font:18px Consolas,monospace;margin-bottom:12px}.async-flow strong,.async-flow span{display:block;font-size:13px}.async-flow span{color:var(--muted);font-size:12px;margin-top:5px}@media(max-width:900px){.map-breakdown{grid-template-columns:1fr}.async-flow{grid-template-columns:repeat(2,1fr)}}@media(max-width:650px){.topicbar{padding:12px 12px 4px;gap:5px}.topicbar button{font-size:11px;padding:5px 10px}.topic-note{padding:4px 12px 8px}.map-breakdown>article{padding:18px}.async-flow{gap:12px}}@media print{.topicbar,.topic-note{display:none}.graph{min-width:0}.node small{font-size:6px}.map-breakdown{grid-template-columns:1fr}.async-flow{grid-template-columns:repeat(4,1fr)}}
 
-.process-groups{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;padding:8px 20px}.process-perception{--process-color:#286fa4}.process-decision{--process-color:#986126}.process-planning{--process-color:#258473}.process-card{border:1px solid var(--line);border-top:3px solid var(--process-color);border-radius:6px;padding:12px;background:#fff}.process-card strong{color:var(--process-color);font-size:13px}.process-card p{font-size:12px;margin:6px 0}.process-card small,.process-note{font-size:11px;color:var(--muted);line-height:1.7}.process-note{padding:0 20px 12px;margin:0}.graph[data-deployment="ipc"] .node[class*="process-"]:not(.process-external){border:2px solid var(--process-color)}@media(max-width:650px){.process-groups{grid-template-columns:1fr;padding:8px 12px}.process-note{padding:0 12px 12px}}
+[hidden]{display:none!important}
+::selection{background:#d9eaf6;color:#173b55}
+.process-perception{--process-color:#286fa4;--process-fill:#f0f6fc}
+.process-decision{--process-color:#8c642d;--process-fill:#fbf7ef}
+.process-planning{--process-color:#257466;--process-fill:#f0f7f4}
+.process-region rect{fill:var(--process-fill);stroke:var(--process-color);stroke-opacity:.3;stroke-width:1}
+.process-title{fill:var(--process-color);font:600 20px 'Segoe UI','Microsoft YaHei',sans-serif}
+.process-caption{fill:var(--process-color);font:14px 'Segoe UI','Microsoft YaHei',sans-serif}
+.external-label{font:13px 'Segoe UI','Microsoft YaHei',sans-serif;fill:#506775}
+.graph[data-deployment="ipc"] .node:not(.process-external){border:1px solid var(--process-color);box-shadow:none}
+.graph[data-deployment="ipc"] .node.public-interface{border-style:dashed}
+.graph[data-deployment="ipc"] .node small{color:#506775}
+.graph[data-deployment="ipc"] .edge text{opacity:0;stroke:#fff;stroke-width:7px;font-size:12px}
+.graph[data-deployment="ipc"] .edge.active text,.graph[data-deployment="ipc"] .edge:hover text,.graph[data-deployment="ipc"] .edge:focus-visible text{opacity:1}
+.graph[data-deployment="ipc"] .edge.internal .route{opacity:.38}
+.graph[data-deployment="ipc"] .edge.active .route{opacity:1}
+.graph[data-deployment="ipc"] .edge.dim{opacity:.07}
+.graph[data-deployment="ipc"] .node.dim{opacity:.4}
+.ipc-control{margin-left:auto}
+.graph-toolbar{flex-wrap:wrap;gap:10px;padding-block:10px}
+.inspector .ownership:last-child{margin-top:18px}
+@media print{.ipc-control{display:none}.graph[data-deployment="ipc"] .edge text{opacity:1}}
+
+.graph[data-deployment="ipc"] .edge.aggregate text{opacity:1;font-size:14px;stroke-width:8px}
+.graph[data-deployment="ipc"] .edge.aggregate .route{stroke-width:2;opacity:.8}
 
 </style>
 
@@ -18,14 +42,13 @@
   <main>
 
     <section class="workbench" aria-label="交互式架构图">
-      <div class="viewbar"><div class="segmented" id="views" aria-label="部署视图"><button data-view="logical" aria-pressed="true">逻辑职责</button><button data-view="ipc" aria-pressed="false">当前三进程</button><button data-view="single" aria-pressed="false">单进程候选</button></div><button class="quiet" id="reset">重置视图 ↺</button></div>
+      <div class="viewbar"><div class="segmented" id="views" aria-label="部署视图"><button data-view="logical" aria-pressed="true">逻辑职责</button><button data-view="ipc" aria-pressed="false">当前三进程</button><button data-view="single" aria-pressed="false">单进程候选</button></div><button class="quiet" id="reset">重置视图</button></div>
       <div class="view-note" id="view-note">连线表示逻辑交互，不规定进程、线程或类的划分。点击模块或连线查看职责与接口。</div>
-      <div class="process-groups" id="process-groups" aria-label="当前三个算法进程"></div><p class="process-note">决策模块含调度核心、Anomaly、Map Server；下图拆开绘制便于查看职责。Business_core 保持外部业务角色；TF 是 SLAM 接口。分组表示当前部署方向，不规定线程或类。</p>
       <div class="workspace"><div class="diagram-pane">
         <div class="topicbar" aria-label="架构专题"><button data-topic="main" aria-pressed="true">系统总览</button><button data-topic="mapping" aria-pressed="false">定位与地图</button><button data-topic="assets" aria-pressed="false">地图协作</button><button data-topic="orchestration" aria-pressed="false">调度与异常</button></div><p id="topic-note" class="topic-note"></p>
-        <div class="graph-toolbar"><div id="filters" class="filters" aria-label="连线类型"><button data-filter="main" aria-pressed="true">主链路</button><button data-filter="data" aria-pressed="false">数据</button><button data-filter="command" aria-pressed="false">指令</button><button data-filter="feedback" aria-pressed="false">反馈</button><button data-filter="all" aria-pressed="false">全部</button></div><label class="suggestions"><input id="suggestions" type="checkbox" checked> 显示补充建议</label></div>
+        <div class="graph-toolbar"><div id="filters" class="filters" aria-label="连线类型"><button data-filter="main" aria-pressed="true">主链路</button><button data-filter="data" aria-pressed="false">数据</button><button data-filter="command" aria-pressed="false">指令</button><button data-filter="feedback" aria-pressed="false">反馈</button><button data-filter="all" aria-pressed="false">全部</button></div><button id="ipc-overview" class="quiet ipc-control" hidden>返回进程总览</button><label class="suggestions"><input id="suggestions" type="checkbox" checked> 显示补充建议</label></div>
         <div class="graph-scroll" tabindex="0" aria-label="架构画布，可横向滚动"><div class="graph" id="graph"><svg id="connections" viewBox="0 0 1480 960" aria-label="模块间有向接口"></svg><div id="nodes"></div></div></div>
-        <div class="legend"><span><i class="line data"></i> 数据流</span><span><i class="line command"></i> 指令流</span><span><i class="line feedback"></i> 反馈 / 事件</span><span><i class="line proposed"></i> 补充建议</span><span class="legend-note">箭头指向接收方 · TF 为公共接口 · 角色不等于进程</span></div>
+        <div class="legend"><span><i class="line data"></i> 数据流</span><span><i class="line command"></i> 指令流</span><span><i class="line feedback"></i> 反馈 / 事件</span><span><i class="line proposed"></i> 补充建议</span><span id="legend-note" class="legend-note">箭头指向接收方 · TF 为公共接口 · 角色不等于进程</span></div>
         <div class="walkthrough"><div class="walk-head"><span class="eyebrow">沿链路查看</span><select id="scenario" aria-label="选择交互流程"><option value="navigate">规划与执行</option><option value="recover">阻塞与恢复</option><option value="mapping">环境到地图</option></select><button class="quiet" id="exit-walk" hidden>退出演示</button></div><div class="walk-body"><span id="step-counter">—</span><div><strong id="step-title">用一条真实协作链路检查职责</strong><p id="step-text">按步骤高亮接口。演示的是建议交互顺序，不是机器人实时状态。</p></div><button id="previous" aria-label="上一步" disabled>←</button><button id="next">开始演示 →</button></div></div>
       </div><aside id="inspector" class="inspector" tabindex="-1" aria-label="职责与接口详情" aria-live="polite"></aside></div>
     </section>
@@ -455,44 +478,219 @@ const architecture = {
 if (typeof module !== 'undefined') module.exports = architecture;
 
 ;
+// Deployment geometry is separate from the unchanged logical architecture.
+function createIpcLayout(modules, edges, processes, routeEdges = edges) {
+  const positions = {
+    business:[650,16], decision:[280,250], map:[650,250], anomaly:[1020,250],
+    slam:[70,540], tf:[330,540], percep:[190,710],
+    navmap:[690,540], global:[960,540], local:[1230,540],
+    recovery:[825,710], motion:[1095,710],
+    sensors:[70,868], camera:[310,868], board:[825,868], motor:[1230,868]
+  };
+  const bounds = {perception:[40,430,490,380],decision:[180,150,1120,210],planning:[660,430,780,380]};
+  const groups = processes.map(p => {const [x,y,w,h]=bounds[p.id];return {...p,x,y,w,h};});
+  const overview = [
+    {from:'business',to:'decision',path:'M740 100 L740 150',lx:870,ly:130,label:'任务 · 地图属性',reverseLabel:'状态'},
+    {from:'perception',to:'decision',path:'M285 430 L285 360',lx:285,ly:400,label:'定位 · 轨迹 · 异常',reverseLabel:'调度'},
+    {from:'decision',to:'planning',path:'M1100 360 L1100 430',lx:1100,ly:400,label:'任务调度 · 地图资产',reverseLabel:'执行反馈'},
+    {from:'perception',to:'planning',path:'M530 620 L660 620',lx:595,ly:602,label:'TF · BEV · Submap'},
+    {from:'sensors',to:'perception',path:'M160 868 L160 810',lx:160,ly:840,label:'定位传感器'},
+    {from:'camera',to:'perception',path:'M400 868 L400 810',lx:400,ly:840,label:'视觉输入'},
+    {from:'board',to:'decision',path:'M915 952 L915 976 L1460 976 L1460 300 L1300 300',lx:1360,ly:840,label:'硬件异常'},
+    {from:'board',to:'planning',path:'M915 868 L915 810',lx:915,ly:840,label:'轮速'},
+    {from:'planning',to:'motor',path:'M1320 810 L1320 868',lx:1160,ly:840,label:'运动指令',reverseLabel:'执行反馈'}
+  ];
+  const nodes = modules.map(m => {
+    if (!positions[m.id]) throw new Error(`Missing deployment position: ${m.id}`);
+    return {...m, x:positions[m.id][0], y:positions[m.id][1], w:180, h:84};
+  });
+  const byId = Object.fromEntries(nodes.map(m=>[m.id,m]));
+  const headers=groups.map(g=>({x:g.x+16,y:g.y+8,w:280,h:52}));
+  const boxes = [...nodes.map(n=>({...n,x:n.x-36,y:n.y-36,w:n.w+72,h:n.h+72})), ...headers];
+  // Each visible interface gets its own port, with a straight 36px approach to the arrow.
+  const endpoints=[];
+  for(const edge of routeEdges)for(const end of ['from','to']) {
+    const n=byId[edge[end]], other=byId[edge[end==='from'?'to':'from']];
+    const dx=other.x-n.x,dy=other.y-n.y;
+    let side=Math.abs(dy)>100?(dy>0?'bottom':'top'):(dx>0?'right':'left');
+    const header=headers.find(h=>n.x+n.w/2>h.x&&n.x+n.w/2<h.x+h.w&&h.y>other.y+other.h&&h.y+h.h<n.y);
+    if(side==='top'&&header)side=dx>0?'right':'left';
+    endpoints.push({edge:edge.id,end,node:n,other,side,order:side==='top'||side==='bottom'?other.x:other.y});
+  }
+  // Spread dense fan-outs across adjacent sides instead of squeezing arrowheads together.
+  for(const n of nodes)for(const side of ['left','right']){
+    const list=endpoints.filter(p=>p.node===n&&p.side===side);
+    while(list.length>4){
+      const p=list.pop();
+      p.side=p.other.y<n.y?'top':'bottom';
+      p.order=p.other.x;
+    }
+  }
+  for(const n of nodes)for(const side of ['left','right','top','bottom']) {
+    const list=endpoints.filter(p=>p.node===n&&p.side===side).sort((a,b)=>a.order-b.order||a.edge.localeCompare(b.edge));
+    list.forEach((p,i)=>{
+      const horizontal=side==='top'||side==='bottom';
+      const offset=(i-(list.length-1)/2)*Math.min(22,((horizontal?n.w:n.h)-24)/Math.max(1,list.length-1));
+      p.border={x:horizontal?n.x+n.w/2+offset:side==='left'?n.x:n.x+n.w,y:horizontal?(side==='top'?n.y:n.y+n.h):n.y+n.h/2+offset};
+      p.anchor={x:p.border.x+(side==='left'?-36:side==='right'?36:0),y:p.border.y+(side==='top'?-36:side==='bottom'?36:0)};
+    });
+  }
+  const allAnchors=endpoints.map(p=>p.anchor);
+  const xs = [...new Set([12,1468,...allAnchors.map(p=>p.x),...boxes.flatMap(n=>[n.x-24,n.x,n.x+n.w,n.x+n.w+24])])].filter(x=>x>=8&&x<=1472).sort((a,b)=>a-b);
+  const ys = [...new Set([8,982,...allAnchors.map(p=>p.y),...boxes.flatMap(n=>[n.y-24,n.y,n.y+n.h,n.y+n.h+24])])].filter(y=>y>=8&&y<=982).sort((a,b)=>a-b);
+  const points = ys.flatMap(y=>xs.map(x=>({x,y})));
+  const inside = p => boxes.some(b=>p.x>b.x&&p.x<b.x+b.w&&p.y>b.y&&p.y<b.y+b.h);
+  const crosses = (a,b) => boxes.some(r=>a.y===b.y
+    ? a.y>r.y&&a.y<r.y+r.h&&Math.max(a.x,b.x)>r.x&&Math.min(a.x,b.x)<r.x+r.w
+    : a.x>r.x&&a.x<r.x+r.w&&Math.max(a.y,b.y)>r.y&&Math.min(a.y,b.y)<r.y+r.h);
+  const neighbors = points.map((p,i)=>inside(p)?[]:[i%xs.length?i-1:-1,i%xs.length<xs.length-1?i+1:-1,i-xs.length,i+xs.length]
+    .filter(j=>j>=0&&j<points.length&&!inside(points[j])&&!crosses(p,points[j])));
+  const index = (x,y)=>ys.indexOf(y)*xs.length+xs.indexOf(x);
+  const distance = (a,b)=>Math.abs(a.x-b.x)+Math.abs(a.y-b.y);
+  const usage = new Map();
+  const routes = {};
+  const lanes=[];
+  const normal={left:{x:-1,y:0},right:{x:1,y:0},top:{x:0,y:-1},bottom:{x:0,y:1}};
+  for (const edge of routeEdges) {
+    const start=endpoints.find(p=>p.edge===edge.id&&p.end==='from');
+    const end=endpoints.find(p=>p.edge===edge.id&&p.end==='to');
+    const targets = new Set([index(end.anchor.x,end.anchor.y)]);
+    const estimate = i=>Math.min(...[...targets].map(t=>distance(points[i],points[t])));
+    const open = [index(start.anchor.x,start.anchor.y)].map(i=>({i,dir:2,cost:0,score:estimate(i),previous:null}));
+    const costs = new Map(open.map(s=>[`${s.i}:2`,0]));
+    let finish;
+    while(open.length) {
+      open.sort((a,b)=>b.score-a.score);
+      const current=open.pop();
+      if(current.cost!==costs.get(`${current.i}:${current.dir}`)) continue;
+      if(targets.has(current.i)){finish=current;break;}
+      for(const next of neighbors[current.i]) {
+        const a=points[current.i], b=points[next];
+        const dot=n=>(b.x-a.x)*n.x+(b.y-a.y)*n.y;
+        if(!current.previous&&dot(normal[start.side])<0||targets.has(next)&&dot(normal[end.side])>0)continue;
+        const dir=b.y===a.y?0:1;
+        const nearby=lanes.some(l=>l.dir===dir&&Math.abs((dir===0?a.y:a.x)-l.axis)<18&&Math.max(dir===0?a.x:a.y,dir===0?b.x:b.y)>l.min&&Math.min(dir===0?a.x:a.y,dir===0?b.x:b.y)<l.max);
+        const segment=[current.i,next].sort((a,b)=>a-b).join(':');
+        const cost=current.cost+distance(points[current.i],points[next])+(current.dir!==2&&current.dir!==dir?48:0)+(usage.get(segment)||0)*80+(nearby?distance(a,b)*3+30:0);
+        const key=`${next}:${dir}`;
+        if(cost>=(costs.get(key)??Infinity))continue;
+        costs.set(key,cost);
+        open.push({i:next,dir,cost,score:cost+estimate(next),previous:current});
+      }
+    }
+    if(!finish)throw new Error(`Cannot route deployment interface: ${edge.id}`);
+    const chain=[];
+    for(let cursor=finish;cursor;cursor=cursor.previous)chain.unshift(cursor.i);
+    for(let i=1;i<chain.length;i++) {
+      const key=[chain[i-1],chain[i]].sort((a,b)=>a-b).join(':');
+      usage.set(key,(usage.get(key)||0)+1);
+    }
+    const line=[start.border,...chain.map(i=>points[i]),end.border]
+      .filter((p,i,all)=>!i||i===all.length-1||!((all[i-1].x===p.x&&p.x===all[i+1].x)||(all[i-1].y===p.y&&p.y===all[i+1].y)));
+    for(let i=1;i<line.length;i++){
+      const a=line[i-1],b=line[i],dir=a.y===b.y?0:1;
+      lanes.push({dir,axis:dir===0?a.y:a.x,min:Math.min(dir===0?a.x:a.y,dir===0?b.x:b.y),max:Math.max(dir===0?a.x:a.y,dir===0?b.x:b.y)});
+    }
+    const segments=line.slice(1).map((p,i)=>({a:line[i],b:p,length:distance(line[i],p)})).sort((a,b)=>b.length-a.length);
+    const longest=segments[0];
+    routes[edge.id]={path:line.map((p,i)=>`${i?'L':'M'}${p.x} ${p.y}`).join(' '), lx:(longest.a.x+longest.b.x)/2, ly:(longest.a.y+longest.b.y)/2-10, points:line};
+  }
+  return {nodes:nodes.sort((a,b)=>a.y-b.y||a.x-b.x),groups,routes,overview,headers,height:990};
+}
+if(typeof module!=='undefined')module.exports=createIpcLayout;
+
+
+;
 const {modules,edges,questions,scenarios,topics,processes}=architecture;
 const $=id=>document.getElementById(id);
 const names=Object.fromEntries(modules.map(m=>[m.id,m.name]));
+const ipcLayout=createIpcLayout(modules,edges,processes,[]);
 const processOf=id=>processes.find(p=>p.members.includes(id));
-const colors={data:'#286fa4',command:'#b36a24',feedback:'#258473'};
+const isInternal=e=>!!processOf(e.from)&&processOf(e.from)===processOf(e.to);
+const colors={data:'#286fa4',command:'#b36a24',feedback:'#258473',aggregate:'#627989'};
 const typeNames={data:'数据',command:'指令',feedback:'反馈'};
 const state={view:'logical',filter:'main',topic:'main',suggestions:true,selected:null,edge:null,scenario:'navigate',step:-1};
-const notes={logical:'Decision 节点表示调度核心；Anomaly、Map Server 是决策模块的子模块，分开绘制以展开接口。连线表示逻辑交互。',ipc:'当前按感知定位、决策、规控三个进程划分，节点边框与上方分组同色。Nav Map 放规控；跨进程走 IPC。Global / Local 虽同进程，交互仍经 Decision。',single:'后期候选：算法模块可装配进同一进程。虚框仅表示候选装配范围，Business_core 是否合并待定；逻辑职责和统一调度关系保持不变。'};
+const notes={logical:'Decision 节点表示调度核心；Anomaly、Map Server 是决策模块的子模块，分开绘制以展开接口。连线表示逻辑交互。',ipc:'总览只显示进程之间及外部的交互；点击子模块查看具体接口，点击“返回进程总览”收起。Global / Local 仍经 Decision 协调。',single:'后期候选：算法模块可装配进同一进程。虚框仅表示候选装配范围，Business_core 是否合并待定；逻辑职责和统一调度关系保持不变。'};
 function visibleEdges(){
   if(state.step>=0){const ids=new Set(scenarios[state.scenario].steps.map(s=>s[0]));return edges.filter(e=>ids.has(e.id));}
   const topicEdges=new Set(topics[state.topic].edges);
-  return edges.filter(e=>(state.suggestions||e.origin!=='补充建议')&&(state.filter==='all'||state.filter==='main'&&(topicEdges.has(e.id)||state.selected&&(e.from===state.selected||e.to===state.selected))||e.type===state.filter));
+  return edges.filter(e=>(state.view!=='ipc'||(state.edge?e.id===state.edge:!state.selected||e.from===state.selected||e.to===state.selected))&&(state.suggestions||e.origin!=='补充建议')&&(state.filter==='all'||state.filter==='main'&&(topicEdges.has(e.id)||state.selected&&(e.from===state.selected||e.to===state.selected))||e.type===state.filter));
 }
 function edgeButton(e){return `<button data-edge="${e.id}">${e.label}<small>${names[e.from]} → ${names[e.to]}</small></button>`;}
 function renderInspector(){
   const e=edges.find(e=>e.id===state.edge);
-  if(e){$('inspector').innerHTML=`<p class="eyebrow">INTERFACE / ${typeNames[e.type]}流</p><span class="small-tag ${e.origin==='补充建议'?'proposal':''}">${e.origin}</span><h2>${e.label}</h2><p class="subtitle">${names[e.from]} → ${names[e.to]}</p><p class="summary">${e.meaning}</p><div class="detail-label">接口需要约定</div><p class="ownership">${e.contract}</p><div class="boundary"><strong>传输与逻辑分开</strong>${state.view==='logical'?'本接口描述交互含义，不指定消息格式与传输机制。':state.view==='ipc'?'跨进程使用 IPC；同进程可为库调用。当前按感知定位、决策、规控三个进程装配，见上方分组。':'同进程可通过组件接口传递，仍需约定数据生命周期、取消、顺序与有效性。'}</div><div class="detail-label">两端职责</div><div class="port-list"><button data-module="${e.from}">${names[e.from]} · 发送方 →</button><button data-module="${e.to}">${names[e.to]} · 接收方 →</button></div>`;return;}
+  if(e){$('inspector').innerHTML=`<span class="small-tag ${e.origin==='补充建议'?'proposal':''}">${e.origin}</span><h2>${e.label}</h2><p class="subtitle">${names[e.from]} → ${names[e.to]}${state.view==='ipc'?'<br>'+(!processOf(e.from)||!processOf(e.to)?'外部接口':isInternal(e)?'进程内接口':'IPC · '+processOf(e.from).name+' → '+processOf(e.to).name):''}</p><p class="summary">${e.meaning}</p><div class="detail-label">接口需要约定</div><p class="ownership">${e.contract}</p><div class="boundary"><strong>传输与逻辑分开</strong>${state.view==='logical'?'本接口描述交互含义，不指定消息格式与传输机制。':state.view==='ipc'?'跨进程使用 IPC；同进程可为库调用。当前按感知定位、决策、规控三个容器装配。':'同进程可通过组件接口传递，仍需约定数据生命周期、取消、顺序与有效性。'}</div><div class="detail-label">两端职责</div><div class="port-list"><button data-module="${e.from}">${names[e.from]} · 发送方 →</button><button data-module="${e.to}">${names[e.to]} · 接收方 →</button></div>`;return;}
   const m=modules.find(m=>m.id===state.selected);
-  if(!m){$('inspector').innerHTML='<p class="eyebrow">架构图 · 交互说明</p><h2>查看模块与交互</h2><p class="summary">点击模块查看职责，点击连线查看数据与指令。上方切换专题与部署视图，下方可逐步演示协作流程。</p>';return;}
+  if(!m){$('inspector').innerHTML=state.view==='ipc'?'<h2>三个进程，一条协作链</h2><p class="summary">感知定位提供观测与位姿，决策协调任务，规控生成地图并规划执行。容器表示部署归属，总览连线汇总进程间的接口。</p><div class="boundary"><strong>先看跨进程，再看内部职责</strong>点击子模块展开具体接口，再用“返回进程总览”收起。汇总线的箭头依据当前筛选范围，悬停可查看包含的接口。TF 是 SLAM 公共接口。</div><div class="detail-label">关键交互</div><div class="port-list">'+['global-state','decision-local','board-anomaly','percep-submap'].map(id=>edgeButton(edges.find(e=>e.id===id))).join('')+'</div><p class="ownership">Recovery / Motion 暂归规控；Business_core 为外部业务模块。</p>':'<h2>查看模块与交互</h2><p class="summary">点击模块查看职责，点击连线查看数据与指令。切换“当前三进程”查看部署分组；下方可逐步演示协作流程。</p>';return;}
   const incoming=edges.filter(e=>e.to===m.id),outgoing=edges.filter(e=>e.from===m.id);
-  $('inspector').innerHTML=`<p class="eyebrow">${m.id==='tf'?'PUBLIC INTERFACE / SLAM 公共输出':'MODULE / 逻辑能力'}</p><span class="small-tag ${m.tag.includes('待')?'proposal':''}">${m.tag}</span><h2>${m.name}</h2><p class="subtitle">${m.cn}<br>${m.role}<br>${processOf(m.id)?.name||'算法进程外部'}${m.parent?' · 隶属决策模块':''}</p><p class="summary">${m.summary}</p><div class="detail-label">状态与数据归属</div><p class="ownership">${m.owns}</p><div class="detail-label">内部职责 · 确认范围与建议见各项标注</div><ul class="parts">${m.parts.map(([n,d])=>`<li><strong>${n}</strong><p>${d}</p></li>`).join('')}</ul><div class="boundary"><strong>边界与待确认项</strong>${m.boundary}</div><div class="detail-label">输入接口 · 含补充建议</div><div class="port-list">${incoming.map(edgeButton).join('')||'<p class="ownership">外部输入未进一步展开。</p>'}</div><div class="detail-label">输出接口 · 含补充建议</div><div class="port-list">${outgoing.map(edgeButton).join('')||'<p class="ownership">外部输出未进一步展开。</p>'}</div>`;
+  $('inspector').innerHTML=`<span class="small-tag ${m.tag.includes('待')?'proposal':''}">${m.tag}</span><h2>${m.name}</h2><p class="subtitle">${m.cn}<br>${m.role}<br>${processOf(m.id)?.name||'算法进程外部'}${m.parent?' · 隶属决策模块':''}</p><p class="summary">${m.summary}</p><div class="detail-label">状态与数据归属</div><p class="ownership">${m.owns}</p><div class="detail-label">内部职责 · 确认范围与建议见各项标注</div><ul class="parts">${m.parts.map(([n,d])=>`<li><strong>${n}</strong><p>${d}</p></li>`).join('')}</ul><div class="boundary"><strong>边界与待确认项</strong>${m.boundary}</div><div class="detail-label">输入接口 · 含补充建议</div><div class="port-list">${incoming.map(edgeButton).join('')||'<p class="ownership">外部输入未进一步展开。</p>'}</div><div class="detail-label">输出接口 · 含补充建议</div><div class="port-list">${outgoing.map(edgeButton).join('')||'<p class="ownership">外部输出未进一步展开。</p>'}</div>`;
+}
+// Measure the actual SVG text; labels reserve space independently of route selection.
+function placeInterfaceLabels(layout){
+  const occupied=[...layout.nodes.map(n=>({x:n.x-8,y:n.y-8,w:n.w+16,h:n.h+16})),...layout.headers];
+  const overlap=(a,b)=>a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y;
+  const lineBoxes=Object.values(layout.routes).flatMap(r=>r.points.slice(1).map((p,i)=>({x:Math.min(p.x,r.points[i].x)-2,y:Math.min(p.y,r.points[i].y)-2,w:Math.abs(p.x-r.points[i].x)+4,h:Math.abs(p.y-r.points[i].y)+4})));
+  for(const group of $('connections').querySelectorAll('[data-edge]')){
+    const text=group.querySelector('text'), route=layout.routes[group.dataset.edge];
+    const box=text.getBBox(),w=box.width+14,h=box.height+10;
+    const candidates=[];
+    for(let i=1;i<route.points.length;i++){
+      const a=route.points[i-1],b=route.points[i],horizontal=a.y===b.y;
+      for(const t of [.5,.25,.75])for(const offset of [18,36,54,72,90,120])for(const sign of [-1,1]){
+        const cx=a.x+(b.x-a.x)*t+(horizontal?0:sign*(w/2+offset));
+        const cy=a.y+(b.y-a.y)*t+(horizontal?sign*offset:0);
+        const rect={x:cx-w/2,y:cy-h/2,w,h};
+        if(rect.x<6||rect.x+w>1474||rect.y<6||rect.y+h>layout.height-6||occupied.some(r=>overlap(rect,r)))continue;
+        candidates.push({...rect,cx,cy,score:offset+(horizontal?0:18)+Math.abs(t-.5)*30+lineBoxes.filter(r=>overlap(rect,r)).length*200});
+      }
+    }
+    candidates.sort((a,b)=>a.score-b.score);
+    const best=candidates[0];
+    if(!best)throw new Error('No room for interface label: '+group.dataset.edge);
+    text.setAttribute('x',best.cx);
+    text.setAttribute('y',best.cy+box.height/2-3);
+    occupied.push(best);
+  }
 }
 function render(){
   $('view-note').textContent=notes[state.view];
+  document.querySelector('.ipc-control').hidden=state.view!=='ipc';
+  const overview=state.view==='ipc'&&!state.selected&&!state.edge&&state.step<0;
+  $('ipc-overview').disabled=overview;
+  $('legend-note').textContent=state.view==='ipc'?(overview?'汇总线连接进程边界 · 悬停查看接口 · 点击子模块展开':'显示所选模块 / 接口 · 返回进程总览可收起'):'箭头指向接收方 · TF 为公共接口';
+  const height=state.view==='ipc'?ipcLayout.height:960;
+  $('connections').setAttribute('viewBox',`0 0 1480 ${height}`);
+  $('graph').style.setProperty('--graph-height',height);
   document.querySelectorAll('[data-view]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.view===state.view));
   document.querySelectorAll('[data-filter]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.filter===state.filter));
   document.querySelectorAll('[data-topic]').forEach(b=>b.setAttribute('aria-pressed',state.filter==='main'&&b.dataset.topic===state.topic));
   $('topic-note').textContent=state.filter==='main'?topics[state.topic].note:'当前按全图接口类型筛选；点击专题按钮返回相应关系视图。';
   $('suggestions').checked=state.suggestions;
   const shown=visibleEdges();
+  const detailLayout=state.view==='ipc'&&!overview?createIpcLayout(modules,edges,processes,shown):ipcLayout;
   const focus=state.edge?new Set(edges.filter(e=>e.id===state.edge).flatMap(e=>[e.from,e.to])):state.selected?new Set([state.selected,...shown.filter(e=>e.from===state.selected||e.to===state.selected).flatMap(e=>[e.from,e.to])]):null;
-  let svg=`<defs>${Object.entries(colors).map(([k,v])=>`<marker id="arrow-${k}" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L8 4 L0 8 Z" fill="${v}"/></marker>`).join('')}</defs>`;
+  let svg=`<defs>${Object.entries(colors).map(([k,v])=>`<marker id="arrow-${k}" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="${state.view==='ipc'?10:6}" markerHeight="${state.view==='ipc'?10:6}" ${state.view==='ipc'?'markerUnits="userSpaceOnUse"':''} orient="auto-start-reverse"><path d="M0 0 L8 4 L0 8 Z" fill="${v}"/></marker>`).join('')}</defs>`;
   if(state.view==='single')svg+='<path class="deployment-outline" d="M23 155 H315 V285 H645 V20 H1190 V910 H23 V760 H255 V635 H23 Z"/><text class="deployment-label" x="660" y="897">候选算法进程 · client / server 仍为逻辑角色</text>';
   $('graph').dataset.deployment=state.view;
-  svg+='<text class="layer-label" x="330" y="25">BUSINESS</text><text class="layer-label" x="660" y="25">ASYNC CLIENT</text><text class="layer-label" x="1280" y="25">HARDWARE EVENTS</text>';
-  svg+=shown.map(e=>{const active=state.edge===e.id||!state.edge&&state.selected&&(e.from===state.selected||e.to===state.selected);const dim=!!(state.edge||state.selected)&&!active;return `<g class="edge ${e.origin==='补充建议'?'suggested':''} ${active?'active':''} ${dim?'dim':''}" style="--edge-color:${colors[e.type]}" data-edge="${e.id}" role="button" tabindex="0" aria-label="${names[e.from]} 到 ${names[e.to]}：${e.label}，${e.origin}"><title>${e.label} · ${e.origin}</title><path class="route" d="${e.path}" marker-end="url(#arrow-${e.type})"/><path class="hit" d="${e.path}"/><text x="${e.lx}" y="${e.ly}">${e.label}</text></g>`;}).join('');
+  if(state.view!=='ipc')svg+='<text class="layer-label" x="330" y="25">BUSINESS</text><text class="layer-label" x="660" y="25">ASYNC CLIENT</text><text class="layer-label" x="1280" y="25">HARDWARE EVENTS</text>';
+  if(state.view==='ipc')svg+=ipcLayout.groups.map(g=>`<g class="process-region process-${g.id}" data-process="${g.id}" aria-label="${g.name}"><rect x="${g.x}" y="${g.y}" width="${g.w}" height="${g.h}" rx="16"/><text class="process-title" x="${g.x+24}" y="${g.y+32}">${g.name}</text><text class="process-caption" x="${g.x+24}" y="${g.y+53}">${g.id==='perception'?'定位 · 观测 · 公共 TF':g.id==='decision'?'调度核心 · 异常检测 · 地图资产':'导航地图 · 规划 · 运动执行'}</text></g>`).join('');
+  if(overview) {
+    const endpoint=id=>processOf(id)?.id||id;
+    svg+=ipcLayout.overview.map(r=>{
+      const forward=shown.filter(e=>endpoint(e.from)===r.from&&endpoint(e.to)===r.to);
+      const backward=shown.filter(e=>endpoint(e.from)===r.to&&endpoint(e.to)===r.from);
+      const members=[...forward,...backward];
+      if(!members.length)return '';
+      const type=members.every(e=>e.type===members[0].type)?members[0].type:'aggregate';
+      const summary=r.reverseLabel?[forward.length?r.label:'',backward.length?r.reverseLabel:''].filter(Boolean).join(' · '):r.label;
+      const label=state.filter==='main'||state.filter==='all'?summary:typeNames[state.filter];
+      return `<g class="edge aggregate ${members.every(e=>e.origin==='补充建议')?'suggested':''}" style="--edge-color:${colors[type]}" data-process-link="${r.from}:${r.to}" tabindex="0" aria-label="${summary}，${members.length} 条接口"><title>${members.map(e=>names[e.from]+' → '+names[e.to]+'：'+e.label).join('；')}</title><path class="route" d="${r.path}" ${backward.length?'marker-start="url(#arrow-'+type+')"':''} ${forward.length?'marker-end="url(#arrow-'+type+')"':''}/><path class="hit" d="${r.path}"/><text x="${r.lx}" y="${r.ly}">${label}</text></g>`;
+    }).join('');
+  }
+  else svg+=shown.map(e=>{const geometry=state.view==='ipc'?detailLayout.routes[e.id]:e;const active=state.edge===e.id||!state.edge&&state.selected&&(e.from===state.selected||e.to===state.selected);const dim=!!(state.edge||state.selected)&&!active;return `<g class="edge ${state.view==='ipc'?(isInternal(e)?'internal':'cross-process'):''} ${e.origin==='补充建议'?'suggested':''} ${active?'active':''} ${dim?'dim':''}" style="--edge-color:${colors[e.type]}" data-edge="${e.id}" role="button" tabindex="0" aria-label="${names[e.from]} 到 ${names[e.to]}：${e.label}，${e.origin}"><title>${e.label} · ${e.origin}</title><path class="route" d="${geometry.path}" marker-end="url(#arrow-${e.type})"/><path class="hit" d="${geometry.path}"/><text x="${geometry.lx}" y="${geometry.ly}">${e.label}</text></g>`;}).join('');
   $('connections').innerHTML=svg;
-  $('nodes').innerHTML=modules.map(m=>`<button data-module="${m.id}" class="node ${m.kind} process-${processOf(m.id)?.id||'external'} ${m.id==='tf'?'public-interface':''} ${state.selected===m.id&&!state.edge?'selected':''} ${focus&&!focus.has(m.id)?'dim':''}" style="--x:${m.x};--y:${m.y}" aria-pressed="${state.selected===m.id&&!state.edge}" aria-label="${m.name} ${m.cn}：查看职责"><strong>${m.id==='anomaly'?'Anomaly':m.name}</strong><span>${m.cn}</span><small title="${m.role}">${state.view==='ipc'?(processOf(m.id)?.name||'外部输入 / 执行对象'):m.role}</small></button>`).join('');
+  if(state.view==='ipc'&&!overview)placeInterfaceLabels(detailLayout);
+  $('nodes').innerHTML=(state.view==='ipc'?ipcLayout.nodes:modules).map(m=>`<button data-module="${m.id}" class="node ${m.kind} process-${processOf(m.id)?.id||'external'} ${m.id==='tf'?'public-interface':''} ${state.selected===m.id&&!state.edge?'selected':''} ${focus&&!focus.has(m.id)?'dim':''}" style="--x:${m.x};--y:${m.y}" aria-pressed="${state.selected===m.id&&!state.edge}" aria-label="${m.name} ${m.cn}：查看职责"><strong>${m.id==='anomaly'?'Anomaly':m.name}</strong><span>${m.cn}</span><small title="${m.role}">${state.view==='ipc'?(processOf(m.id)?.name||'外部输入 / 执行对象'):m.role}</small></button>`).join('');
   if($('interface-rows')) $('interface-rows').innerHTML=shown.map(e=>`<tr><td>${names[e.from]} <span style="color:#8ba3b3">→</span> ${names[e.to]}</td><td>${e.label}</td><td><i class="type-dot" style="background:${colors[e.type]}"></i>${typeNames[e.type]}</td><td>${e.origin}</td><td><button class="quiet" data-edge="${e.id}" aria-label="查看 ${e.label} 接口">↗</button></td></tr>`).join('');
   if($('table-caption')) $('table-caption').textContent=state.step>=0?'当前显示所选流程涉及的接口。演示是建议顺序，并非已经验证的产品行为。':`当前显示 ${shown.length} 条接口，与上方连线筛选同步。点击右侧箭头查看详细语义。`;
   const flow=scenarios[state.scenario],step=flow.steps[state.step];
@@ -521,6 +719,7 @@ document.addEventListener('click',event=>{
   else if(edgeId)document.querySelector(`#connections [data-edge="${edgeId}"]`)?.focus({preventScroll:true});
 });
 $('connections').addEventListener('keydown',event=>{if(['Enter',' '].includes(event.key)&&event.target.dataset.edge){event.preventDefault();const id=event.target.dataset.edge;selectEdge(id);document.querySelector(`#connections [data-edge="${id}"]`)?.focus({preventScroll:true});}});
+$('ipc-overview').addEventListener('click',()=>{leaveWalk();state.edge=null;state.selected=null;render();$('ipc-overview').focus({preventScroll:true});});
 $('suggestions').addEventListener('change',event=>{leaveWalk();state.suggestions=event.target.checked;state.edge=null;render();});
 $('scenario').addEventListener('change',event=>{state.scenario=event.target.value;leaveWalk();state.edge=null;state.selected=null;render();});
 function stepBy(delta){const flow=scenarios[state.scenario];state.step=(state.step+delta+flow.steps.length)%flow.steps.length;state.edge=flow.steps[state.step][0];state.selected=null;state.suggestions=true;render();}
@@ -529,7 +728,6 @@ $('exit-walk').addEventListener('click',()=>{leaveWalk();state.edge=null;state.s
 $('reset').addEventListener('click',()=>{Object.assign(state,{view:'logical',filter:'main',topic:'main',suggestions:true,selected:null,edge:null,scenario:'navigate',step:-1});$('scenario').value='navigate';render();});
 $('print')?.addEventListener('click',()=>window.print());
 if($('question-list')) $('question-list').innerHTML=questions.map(([s,t,d])=>`<article class="question"><span class="status">${s}</span><h3>${t}</h3><p>${d}</p></article>`).join('');
-$('process-groups').innerHTML=processes.map(p=>`<article class="process-card process-${p.id}"><strong>${p.name}</strong><p>${p.members.filter(id=>id!=='tf').map(id=>names[id]).join(' · ')}</p><small>${p.note}</small></article>`).join('');
 $('scenario').innerHTML=Object.entries(scenarios).map(([id,s])=>`<option value="${id}">${s.name}</option>`).join('');
 render();
 

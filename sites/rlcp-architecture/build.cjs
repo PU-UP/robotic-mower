@@ -6,11 +6,11 @@ function buildHtml() {
   const read = name => fs.readFileSync(path.join(__dirname, 'src', name), 'utf8').replace(/\r\n/g, '\n');
   let html = read('index.html');
   const css = read('style.css');
-  const scripts = ['model.js', 'app.js'].map(read).join('\n;\n');
+  const scripts = ['model.js', 'layout.js', 'app.js'].map(read).join('\n;\n');
   assert(!/<\/style/i.test(css), 'Styles contain an HTML closing tag');
   assert(!/<\/script/i.test(scripts), 'Scripts contain an HTML closing tag');
   const stylesheet = '<link rel="stylesheet" href="style.css">';
-  const scriptTags = '<script defer src="model.js"></script><script defer src="app.js"></script>';
+  const scriptTags = '<script defer src="model.js"></script><script defer src="layout.js"></script><script defer src="app.js"></script>';
   assert(html.includes(stylesheet) && html.includes(scriptTags), 'Source asset tags changed');
   assert.equal((html.match(/<!-- FULL_ONLY_START -->/g) || []).length, 3);
   assert.equal((html.match(/<!-- FULL_ONLY_END -->/g) || []).length, 3);
