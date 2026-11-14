@@ -18,7 +18,7 @@ function createIpcLayout(modules, edges, processes, routeEdges = edges) {
     {from:'camera',to:'perception',path:'M400 868 L400 810',lx:400,ly:840,label:'视觉输入'},
     {from:'board',to:'decision',path:'M915 952 L915 976 L1460 976 L1460 300 L1300 300',lx:1360,ly:840,label:'硬件异常'},
     {from:'board',to:'planning',path:'M915 868 L915 810',lx:915,ly:840,label:'轮速'},
-    {from:'planning',to:'motor',path:'M1320 810 L1320 868',lx:1160,ly:840,label:'运动指令',reverseLabel:'执行反馈'}
+    {from:'planning',to:'motor',path:'M1320 810 L1320 868',lx:1160,ly:840,label:'各电机目标速度'}
   ];
   const nodes = modules.map(m => {
     if (!positions[m.id]) throw new Error(`Missing deployment position: ${m.id}`);

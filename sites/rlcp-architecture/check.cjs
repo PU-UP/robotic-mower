@@ -94,7 +94,7 @@ for (const id of ['global-state','decision-local']) assert(planningSteps.include
 assert(planningSteps.indexOf('global-state') < planningSteps.indexOf('decision-local'));
 assert.equal(edges.find(e => e.id === 'submap-register').origin, '补充建议', 'Undecided anchor protocol must remain a proposal');
 const wheel = edges.find(e => e.id === 'wheel-local');
-assert(wheel && wheel.from === 'board' && wheel.to === 'local' && wheel.origin === '用户确认', 'Wheel speed must feed Local planner');
+assert(wheel && wheel.from === 'board' && wheel.to === 'local' && wheel.origin === '用户确认', 'Wheel speed must feed local controller');
 assert(!edges.some(e => e.id === 'wheel-nav'), 'Superseded wheel-speed relation remains');
 assert(modules.find(m => m.id === 'map').parts.some(([, detail]) => detail.includes('map 坐标均冻结') && detail.includes('SLAM 优化不得修改') && detail.includes('新版本')), 'Saved boundary coordinates must remain frozen and edits produce a new version');
 for (const [id, from, to] of [['slam-trajectory','slam','map'],['business-map','business','map'],['map-business','map','business'],['map-constraints','map','navmap']]) {
@@ -218,13 +218,18 @@ if (process.argv[2]) (async () => {
       }
       await page.locator('[data-view="logical"]').click();
       if (variant === 'source') {
-        await page.locator('.map-breakdown [data-module="navmap"]').click();
-        assert.equal(await page.locator('#inspector h2').textContent(), 'Nav Map');
-        assert(await page.locator('#inspector h2').evaluate(el => {
-          const rect = el.getBoundingClientRect();
-          return rect.top >= 0 && rect.bottom <= window.innerHeight;
-        }), 'Detail shortcut does not bring module details into view');
-        assert.equal(await page.locator(':focus').getAttribute('id'), 'inspector');
+        for (const [selector, name] of [
+          ['.map-breakdown [data-module="navmap"]', 'Nav Map'],
+          ['.principles > [data-module="local"]', 'local controller']
+        ]) {
+          await page.locator(selector).click();
+          assert.equal(await page.locator('#inspector h2').textContent(), name);
+          assert(await page.locator('#inspector h2').evaluate(el => {
+            const rect = el.getBoundingClientRect();
+            return rect.top >= 0 && rect.bottom <= window.innerHeight;
+          }), 'Detail shortcut does not bring module details into view');
+          assert.equal(await page.locator(':focus').getAttribute('id'), 'inspector');
+        }
         await page.locator('[data-filter="all"]').click();
         await page.locator('#interface-rows [data-edge="tf-global"]').click();
         assert.match(await page.locator('#inspector .subtitle').textContent(), /Global planner/);
@@ -237,7 +242,7 @@ if (process.argv[2]) (async () => {
       await page.setViewportSize({ width: 390, height: 844 });
       assert(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), 'Page overflows mobile viewport');
       await page.locator('#nodes [data-module="motion"]').click();
-      assert.equal(await page.locator('#inspector h2').textContent(), 'Motion');
+      assert.equal(await page.locator('#inspector h2').textContent(), 'motion');
       await page.locator('[data-view="ipc"]').click();
       assert(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), 'Deployment view overflows mobile page');
       await page.screenshot({ path: path.resolve(__dirname, `../../.local-archive/rlcp-architecture-${variant}-mobile.png`), fullPage: true });

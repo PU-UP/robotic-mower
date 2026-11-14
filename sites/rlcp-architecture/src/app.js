@@ -7,7 +7,7 @@ const isInternal=e=>!!processOf(e.from)&&processOf(e.from)===processOf(e.to);
 const colors={data:'#286fa4',command:'#b36a24',feedback:'#258473',aggregate:'#627989'};
 const typeNames={data:'数据',command:'指令',feedback:'反馈'};
 const state={view:'logical',filter:'main',topic:'main',suggestions:true,selected:null,edge:null,scenario:'navigate',step:-1};
-const notes={logical:'Decision 节点表示调度核心；Anomaly、Map Server 是决策模块的子模块，分开绘制以展开接口。连线表示逻辑交互。',ipc:'总览只显示进程之间及外部的交互；点击子模块查看具体接口，点击“返回进程总览”收起。Global / Local 仍经 Decision 协调。',single:'后期候选：算法模块可装配进同一进程。虚框仅表示候选装配范围，Business_core 是否合并待定；逻辑职责和统一调度关系保持不变。'};
+const notes={logical:'Decision 节点表示调度核心；Anomaly、Map Server 是决策模块的子模块，分开绘制以展开接口。连线表示逻辑交互。',ipc:'总览只显示进程之间及外部的交互；点击子模块查看具体接口，点击“返回进程总览”收起。Global / local controller 仍经 Decision 协调。',single:'后期候选：算法模块可装配进同一进程。虚框仅表示候选装配范围，Business_core 是否合并待定；逻辑职责和统一调度关系保持不变。'};
 function visibleEdges(){
   if(state.step>=0){const ids=new Set(scenarios[state.scenario].steps.map(s=>s[0]));return edges.filter(e=>ids.has(e.id));}
   const topicEdges=new Set(topics[state.topic].edges);
@@ -18,7 +18,7 @@ function renderInspector(){
   const e=edges.find(e=>e.id===state.edge);
   if(e){$('inspector').innerHTML=`<span class="small-tag ${e.origin==='补充建议'?'proposal':''}">${e.origin}</span><h2>${e.label}</h2><p class="subtitle">${names[e.from]} → ${names[e.to]}${state.view==='ipc'?'<br>'+(!processOf(e.from)||!processOf(e.to)?'外部接口':isInternal(e)?'进程内接口':'IPC · '+processOf(e.from).name+' → '+processOf(e.to).name):''}</p><p class="summary">${e.meaning}</p><div class="detail-label">接口需要约定</div><p class="ownership">${e.contract}</p><div class="boundary"><strong>传输与逻辑分开</strong>${state.view==='logical'?'本接口描述交互含义，不指定消息格式与传输机制。':state.view==='ipc'?'跨进程使用 IPC；同进程可为库调用。当前按感知定位、决策、规控三个容器装配。':'同进程可通过组件接口传递，仍需约定数据生命周期、取消、顺序与有效性。'}</div><div class="detail-label">两端职责</div><div class="port-list"><button data-module="${e.from}">${names[e.from]} · 发送方 →</button><button data-module="${e.to}">${names[e.to]} · 接收方 →</button></div>`;return;}
   const m=modules.find(m=>m.id===state.selected);
-  if(!m){$('inspector').innerHTML=state.view==='ipc'?'<h2>三个进程，一条协作链</h2><p class="summary">感知定位提供观测与位姿，决策协调任务，规控生成地图并规划执行。容器表示部署归属，总览连线汇总进程间的接口。</p><div class="boundary"><strong>先看跨进程，再看内部职责</strong>点击子模块展开具体接口，再用“返回进程总览”收起。汇总线的箭头依据当前筛选范围，悬停可查看包含的接口。TF 是 SLAM 公共接口。</div><div class="detail-label">关键交互</div><div class="port-list">'+['global-state','decision-local','board-anomaly','percep-submap'].map(id=>edgeButton(edges.find(e=>e.id===id))).join('')+'</div><p class="ownership">Recovery / Motion 暂归规控；Business_core 为外部业务模块。</p>':'<h2>查看模块与交互</h2><p class="summary">点击模块查看职责，点击连线查看数据与指令。切换“当前三进程”查看部署分组；下方可逐步演示协作流程。</p>';return;}
+  if(!m){$('inspector').innerHTML=state.view==='ipc'?'<h2>三个进程，一条协作链</h2><p class="summary">感知定位提供观测与位姿，决策协调任务，规控生成地图并规划执行。容器表示部署归属，总览连线汇总进程间的接口。</p><div class="boundary"><strong>先看跨进程，再看内部职责</strong>点击子模块展开具体接口，再用“返回进程总览”收起。汇总线的箭头依据当前筛选范围，悬停可查看包含的接口。TF 是 SLAM 公共接口。</div><div class="detail-label">关键交互</div><div class="port-list">'+['global-state','decision-local','board-anomaly','percep-submap'].map(id=>edgeButton(edges.find(e=>e.id===id))).join('')+'</div><p class="ownership">Recovery / motion 暂归规控；Business_core 为外部业务模块。</p>':'<h2>查看模块与交互</h2><p class="summary">点击模块查看职责，点击连线查看数据与指令。切换“当前三进程”查看部署分组；下方可逐步演示协作流程。</p>';return;}
   const incoming=edges.filter(e=>e.to===m.id),outgoing=edges.filter(e=>e.from===m.id);
   $('inspector').innerHTML=`<span class="small-tag ${m.tag.includes('待')?'proposal':''}">${m.tag}</span><h2>${m.name}</h2><p class="subtitle">${m.cn}<br>${m.role}<br>${processOf(m.id)?.name||'算法进程外部'}${m.parent?' · 隶属决策模块':''}</p><p class="summary">${m.summary}</p><div class="detail-label">状态与数据归属</div><p class="ownership">${m.owns}</p><div class="detail-label">内部职责 · 确认范围与建议见各项标注</div><ul class="parts">${m.parts.map(([n,d])=>`<li><strong>${n}</strong><p>${d}</p></li>`).join('')}</ul><div class="boundary"><strong>边界与待确认项</strong>${m.boundary}</div><div class="detail-label">输入接口 · 含补充建议</div><div class="port-list">${incoming.map(edgeButton).join('')||'<p class="ownership">外部输入未进一步展开。</p>'}</div><div class="detail-label">输出接口 · 含补充建议</div><div class="port-list">${outgoing.map(edgeButton).join('')||'<p class="ownership">外部输出未进一步展开。</p>'}</div>`;
 }
@@ -104,7 +104,7 @@ function selectEdge(id){
 }
 document.addEventListener('click',event=>{
   const b=event.target.closest('[data-module],[data-edge],[data-filter],[data-view],[data-topic]');if(!b)return;
-  const fromDetailsLink=!!b.closest('table,.map-breakdown');
+  const fromDetailsLink=!!b.closest('table,.principles');
   const moduleId=b.dataset.module,edgeId=b.dataset.edge;
   if(b.dataset.module){leaveWalk();state.selected=b.dataset.module;state.edge=null;render();}
   else if(b.dataset.edge){selectEdge(b.dataset.edge);}
